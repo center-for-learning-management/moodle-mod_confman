@@ -1,0 +1,31 @@
+.confman_list {
+     margin: 5px 0px 5px 0px;
+     border-radius: 10px;
+     border: 1px solid rgba(0, 0, 0, 0.14902);
+}
+.confman_list li {
+     list-style-type: none;
+     background-color: rgb(245, 245, 245);
+     padding: 0px 0px 5px 5px;
+     border-bottom: 1px solid black;  
+}
+.confman_list li:last-child {
+     border-bottom: none;
+}
+.confman_list li a {
+     color: black;
+}
+
+.confman_list li .controls {
+     margin-top: 12px;
+     float: right;
+     width: 40px;
+     height: 100%;
+     vertical-align: middle;
+}
+
+.confman_list li h3, .confman_list li p  {
+     display: block;
+     margin: 0px;
+     font-size: 14px;
+}
