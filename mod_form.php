@@ -72,6 +72,7 @@ class mod_confman_mod_form extends moodleform_mod {
         $mform->addElement('textarea', 'types', get_string('event:types', 'confman'),array('style' => 'width: 100%'));
         $mform->setType('types', PARAM_RAW);
         $mform->setDefault('types',"Vortrag\nWorkshop");
+
  
         //$mform->addElement('filepicker', 'logo', get_string('event:logo','confman'), null, array('maxbytes' => 50*1024, 'accepted_types' => 'image'));
  

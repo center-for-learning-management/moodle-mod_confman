@@ -38,14 +38,13 @@ class mod_confman_event {
           foreach($targetgroups as $target){
                $target = explode("#",$target);
                $this->targetgroups[] = array(
-                   "targetgroup" => @$target[0],
+                   "targetgroup" => trim(@$target[0]),
                    "description" => @$target[1],
                );
           }
           $this->types = explode("\n",$confman->types);
-          
-		
-		
+          for($i=0;$i<count($this->types);$i++) $this->types[$i] = trim($this->types[$i]);
+
 		$this->context = context_course::instance($this->course);
 
           $this->logo = $this->logoURL();
@@ -119,7 +118,7 @@ class mod_confman_event {
 function confman_add_instance($event){
      global $DB,$COURSE;
      $event->course = $COURSE->id;
-     $event->description = $event->description['text'];
+     //$event->description = $event->description['text'];
      $time = new DateTime("now");
      $event->created = $time;
 
@@ -129,7 +128,7 @@ function confman_update_instance($event){
      global $DB,$COURSE;
      $event->id = $event->instance;
      $event->course = $COURSE->id;
-     $event->description = $event->description['text'];
+     //$event->description = $event->description['text'];
      return $DB->update_record('confman', $event);
 }
 function confman_delete_instance($id){
@@ -710,6 +709,7 @@ class mod_confman_item {
           if(!$this->can_manage && !$this->can_rate && !$this->had_token)
                return;
 
+          if($this->id==0) return;
           ?>
           <div class="item" style="margin-top: 20px;">
           <?php
@@ -726,7 +726,7 @@ class mod_confman_item {
                }
           }
 
-          $comments = $DB->get_records_sql('SELECT * FROM {confman_comments} WHERE eventid=? ORDER BY created DESC',array($this->eventid));
+          $comments = $DB->get_records_sql('SELECT * FROM {confman_comments} WHERE eventid=? AND itemid=? ORDER BY created DESC',array($this->eventid,$this->id));
           if(count($comments)>0) echo "<ul data-role=\"listview\" data-inset=\"true\">\n";
           foreach($comments as $comment) {
                $comment->created_readable = Date("l, j. F Y H:i:s",$comment->created);
@@ -748,6 +748,7 @@ class mod_confman_item {
           }
           if(count($comments)>0) echo "</ul>\n";
           
+          if($this->id>0){
           ?>
           
           <form method="POST" enctype="multipart/form-data" action="?event=<?php echo $this->event->id; ?>&id=<?php echo $this->id."&token=".$this->token;  if($this->debug) echo "&debug=".$this->debug; ?>" data-ajax="false">
@@ -760,12 +761,18 @@ class mod_confman_item {
                <input type="submit" value="<?php echo get_string('comment:store','confman'); ?>" />
           </form>
           </div>
-          
           <?php
+          } // this->id>0
      }
      
      public function comment_store(){
           global $DB,$USER;
+          
+          if($this->id==0){
+               $this->errors++;
+               $this->error["comment"] = true;
+               return;
+          }
           
           if(!$this->can_manage && !$this->can_rate && !$this->had_token)
                return;
