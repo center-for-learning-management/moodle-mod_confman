@@ -26,12 +26,11 @@ require_once($CFG->dirroot . '/mod/confman/lib.php');
 
 $navigation = "<a href=\"#panel\" data-role=\"button\" data-icon=\"bars\">Entries</a>";
 
-if(!isset($_GET["event"])) {
-     echo "<p>".get_string("error:missing:eventid","confman")."</p>";
-     exit;
-}
-if(@$_GET["id"]=="") $_GET["id"] = 0;
-$ITEM = new mod_confman_item($_GET["id"],@$_GET["token"]);
+required_param("event",PARAM_INT);
+
+$itemid = optional_param("id",0,PARAM_INT);
+$token = optional_param("token","",PARAM_TEXT);
+$ITEM = new mod_confman_item($itemid,$token);
 
 
 

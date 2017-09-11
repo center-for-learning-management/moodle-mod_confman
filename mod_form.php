@@ -31,12 +31,20 @@ class mod_confman_mod_form extends moodleform_mod {
  
     function definition() {
         global $CFG, $DB, $OUTPUT;
- 
+
         $mform =& $this->_form;
         
         $mform->addElement('text', 'name', get_string('event:name', 'confman'), array('size'=>'64'));
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', null, 'required', null, 'client');
+        
+        $mform->addElement('text', 'event_organizer', get_string('event:organizer', 'confman'), array('size'=>'64'));
+        $mform->setType('event_organizer', PARAM_TEXT);
+        $mform->addRule('event_organizer', null, 'required', null, 'client');
+  
+        $mform->addElement('text', 'event_contact', get_string('event:contact', 'confman'), array('size'=>'64'));
+        $mform->setType('event_contact', PARAM_TEXT);
+        $mform->addRule('event_contact', null, 'required', null, 'client');
 
         $utime = new DateTime("now", core_date::get_user_timezone_object());
         $utz = $utime->getTimezone();
@@ -62,18 +70,18 @@ class mod_confman_mod_form extends moodleform_mod {
               'context'=>null,
               'noclean'=>0,
               'trusttext'=>0,
-              'enable_filemanagement' => false
+              'enable_filemanagement' => false,
             );
-        $mform->addElement('editor', 'description', get_string('event:description', 'confman'));
+        $mform->addElement('editor', 'description', get_string('event:description', 'confman'),$description_args);
         $mform->setType('description', PARAM_RAW);
- 
-        $mform->addElement('text', 'event_organizer', get_string('event:organizer', 'confman'), array('size'=>'64'));
-        $mform->setType('event_organizer', PARAM_TEXT);
-        $mform->addRule('event_organizer', null, 'required', null, 'client');
-  
-        $mform->addElement('text', 'event_contact', get_string('event:contact', 'confman'), array('size'=>'64'));
-        $mform->setType('event_contact', PARAM_TEXT);
-        $mform->addRule('event_contact', null, 'required', null, 'client');
+        
+        $mform->addElement('textarea', 'targetgroups', get_string('event:targetgroups', 'confman'),array('style' => 'width: 100%'));
+        $mform->setType('targetgroups', PARAM_RAW);
+        $mform->setDefault('targetgroups',"digi.komp 4#Primarstufe\ndigi.komp 8#Sekundarstufe I\ndigi.komp 12#Sekundarstufe II\ndigi.komp P#Lehrer/innenfortbildung");
+        
+        $mform->addElement('textarea', 'types', get_string('event:types', 'confman'),array('style' => 'width: 100%'));
+        $mform->setType('types', PARAM_RAW);
+        $mform->setDefault('types',"Vortrag\nWorkshop");
  
         //$mform->addElement('filepicker', 'logo', get_string('event:logo','confman'), null, array('maxbytes' => 50*1024, 'accepted_types' => 'image'));
  

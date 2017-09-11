@@ -13,6 +13,10 @@
         <FIELD NAME="submissionstart" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="submissionend" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="contents" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Additional contents packed as Array"/>
+        <FIELD NAME="event_organizer" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="event_contact" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="targetgroups" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="types" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

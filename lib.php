@@ -30,11 +30,21 @@ class mod_confman_event {
 		$this->description = $confman->description;
 		$this->submissionstart = $confman->submissionstart;
 		$this->submissionend = $confman->submissionend;
+          $this->event_organizer = $confman->event_organizer;
+          $this->event_contact = $confman->event_contact;
+          
+          $targetgroups = explode("\n",$confman->targetgroups);
+          $this->targetgroups = array();
+          foreach($targetgroups as $target){
+               $target = explode("#",$target);
+               $this->targetgroups[] = array(
+                   "targetgroup" => @$target[0],
+                   "description" => @$target[1],
+               );
+          }
+          $this->types = explode("\n",$confman->types);
+          
 		
-          $c = @json_decode($confman->contents);
-
-          $this->event_organizer = @$c->event_organizer;
-          $this->event_contact = @$c->event_contact;
 		
 		$this->context = context_course::instance($this->course);
 
@@ -106,17 +116,8 @@ class mod_confman_event {
 	}
 }
 
-function confman_pack_contents($event){
-     $event->contents = json_encode(array(
-          "event_organizer" => $event->event_organizer,
-          "event_contact" => $event->event_contact,
-     ),JSON_NUMERIC_CHECK);
-     return $event;
-}
-
 function confman_add_instance($event){
      global $DB,$COURSE;
-     $event = confman_pack_contents($event);
      $event->course = $COURSE->id;
      $event->description = $event->description['text'];
      $time = new DateTime("now");
@@ -126,7 +127,6 @@ function confman_add_instance($event){
 }
 function confman_update_instance($event){
      global $DB,$COURSE;
-     $event = confman_pack_contents($event);
      $event->id = $event->instance;
      $event->course = $COURSE->id;
      $event->description = $event->description['text'];
@@ -151,6 +151,8 @@ class mod_confman_item {
      public function __construct($id,$token=""){
           global $DB,$CFG;
           
+          $this->debug = optional_param("debug",0,PARAM_INT);
+          
           $this->confman = $CFG->wwwroot.'/mod/confman/';
           $this->id = $id;
           $this->token = $token;
@@ -163,7 +165,7 @@ class mod_confman_item {
           foreach($entries as $entry) $this->data = $entry;
           if(!isset($this->data)) $this->data = new stdClass();
           
-          $this->eventid = @$this->data->event || @$_GET["event"];
+          $this->eventid = @$this->data->event || optional_param("event",0,PARAM_INT);
           $this->event = new mod_confman_event($this->eventid); // $DB->get_record('confman',array('id'=>$this->eventid));
           $this->event->submissionstart_readable = Date("Y-m-d, H:i:s",$this->event->submissionstart);
           $this->event->submissionend_readable = Date("Y-m-d, H:i:s",$this->event->submissionend);
@@ -198,10 +200,10 @@ class mod_confman_item {
           else $this->title = get_string('pluginname','confman');
           
           $this->manageLink = $this->manageLink();
-          if(@$_GET["debug"]=="1") print_r($this);
+          if($this->debug) { print_r($this); }
           
-          if(@$_POST["store"]=="1") $this->store();
-          if(@$_POST["store_comment"]=="1") $this->comment_store();
+          if(optional_param("store",0,PARAM_INT)==1) $this->store();
+          if(optional_param("store_comment",0,PARAM_INT)==1) $this->comment_store();
      }
 
      public function store(){
@@ -211,15 +213,18 @@ class mod_confman_item {
           
           $relocate = false;
 
-          $keys = array("title_pre","title_post","firstname","lastname","email","email2","title","targetgroups","description","types","organization","memo");
+          $keys = array("title_pre","title_post","firstname","lastname","email","email2","title","description","organization","memo");
           foreach($keys as $key)
-               $this->data->{$key} = @$_POST[$key];
+               $this->data->{$key} = optional_param($key,"",PARAM_TEXT);
+               
+          $keys = array("targetgroups","types");
+          foreach($keys as $key)
+               $this->data->{$key} = optional_param_array($key,array(),PARAM_RAW);
           
           $tz = new DateTime("now");
           if(!isset($this->data->created))
                $this->data->created = $tz->getTimestamp();
           $this->data->modified = $tz->getTimestamp();
-          $this->data->event = $_GET["event"];
           $this->data->contents = json_encode(array(
                     "targetgroups" => $this->data->targetgroups,
                     "description" => $this->data->description,
@@ -230,7 +235,12 @@ class mod_confman_item {
                     "memo" => $this->data->memo,
                ),JSON_NUMERIC_CHECK);
           
-          if(@$this->data->token=="" || $this->data->token=="NULL") $this->data->token = md5(date("Y-m-d H:i:s").rand(0,1000));
+          if(!isset($this->data->event) || $this->data->event==0)
+               $this->data->event = $this->event->id;
+          if(@$this->data->token=="" || $this->data->token=="NULL"){
+               $this->data->token = md5(date("Y-m-d H:i:s").rand(0,1000));
+               $this->token = $this->data->token;
+          }
           $this->manageLink = $this->manageLink();
           
           if(strlen($this->data->email)<5 || strpos($this->data->email,"@")<2 || strrpos($this->data->email,".")<4) {
@@ -271,7 +281,7 @@ class mod_confman_item {
      }
      
      private function manageLink(){
-          return $this->confman.'index.php?event='.$this->event->id.'&id='.$this->id.'&token='.$this->token;
+          return $this->confman.'index.php?event='.$this->event->id.'&id='.$this->id.'&token='.$this->data->token;
      }
      
      public function mail($type="mail"){
@@ -403,7 +413,7 @@ class mod_confman_item {
 
           email_to_user($toUser, $fromUser, $subject, $messagetext, $messagehtml, "", true);
           
-          if(@$_GET["debug"]=="1"){
+          if($this->debug){
                print_r($toUser);
                print_r($fromUser);
                print_r($messagehtml);
@@ -437,7 +447,7 @@ class mod_confman_item {
                
           ?>
           <div><?php echo $this->event->description; ?></div>
-          <form method="POST" enctype="multipart/form-data" action="?event=<?php echo $this->event->id; ?>&id=<?php echo $this->id."&token=".$this->token; if(isset($_GET["debug"])) echo "&debug=".$_GET["debug"]; ?>" data-ajax="false">
+          <form method="POST" enctype="multipart/form-data" action="?event=<?php echo $this->event->id; ?>&id=<?php echo $this->id."&token=".$this->token; if($this->debug) echo "&debug=".$this->debug; ?>" data-ajax="false">
                <input type="hidden" name="store" value="1">
                <h3><?php echo get_string('item:section:personaldata','confman'); ?></h3>
                <div data-role="fieldset">
@@ -483,39 +493,33 @@ class mod_confman_item {
                </div>
                <div data-role="fieldset">
                     <label><?php echo get_string('item:type','confman'); ?></label>
-
+                    <?php
+                    foreach($this->event->types as $type){
+                    ?>
                     <label>
-                         <input data-role="none" type="checkbox" name="types[]" value="Vortrag" <?php echo ((@in_array("Vortrag",$this->data->types))?"checked=\"checked\"":""); ?> />
-                         Vortrag
+                         <input data-role="none" type="checkbox" name="types[]" value="<?php echo $type; ?>" <?php echo ((@in_array($type,$this->data->types))?"checked=\"checked\"":""); ?> />
+                         <?php echo $type; ?>
                     </label>
-                    <label>
-                         <input data-role="none" type="checkbox" name="types[]" value="Workshop" <?php echo ((@in_array("Workshop",$this->data->types))?"checked=\"checked\"":""); ?> />
-                         Workshop
-                    </label>
-
-                    <?php if(@$this->error["targetgroups"]) echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue','confman')."</p>"; ?>
+                    <?php
+                    }
+                    if(@$this->error["types"]) echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue','confman')."</p>"; ?>
                </div>
                <div data-role="fieldset">
                     <label for="item-targetgroup"><?php echo get_string('item:targetgroup','confman'); ?></label>
 
+                    <?php
+                    foreach($this->event->targetgroups as $target){
+                    ?>
                     <label>
-                         <input data-role="none" type="checkbox" name="targetgroups[]" value="digi.komp 4" <?php echo ((@in_array("digi.komp 4",$this->data->targetgroups))?"checked=\"checked\"":""); ?> />
-                         digi.komp 4 (Primarstufe)
+                         <input data-role="none" type="checkbox" name="targetgroups[]" value="<?php echo $target["targetgroup"]; ?>" <?php echo ((@in_array($target["targetgroup"],$this->data->targetgroups))?"checked=\"checked\"":""); ?> />
+                         <?php
+                              echo $target["targetgroup"];
+                              if($target["description"]!="") echo " (".$target["description"].")";
+                         ?>
                     </label>
-                    <label>
-                         <input data-role="none" type="checkbox" name="targetgroups[]" value="digi.komp 8" <?php echo ((@in_array("digi.komp 8",$this->data->targetgroups))?"checked=\"checked\"":""); ?> />
-                         digi.komp 8 (Sekundarstufe I)
-                    </label>
-                    <label>
-                         <input data-role="none" type="checkbox" name="targetgroups[]" value="digi.komp 12" <?php echo ((@in_array("digi.komp 12",$this->data->targetgroups))?"checked=\"checked\"":""); ?> />
-                         digi.komp 12 (Sekundarstufe II)
-                    </label>
-                    <label>
-                         <input data-role="none" type="checkbox" name="targetgroups[]" value="digi.komp P" <?php echo ((@in_array("digi.komp P",$this->data->targetgroups))?"checked=\"checked\"":""); ?> />
-                         digi.komp P (Lehrer/innen-Fortbildung)
-                    </label>
-
-                    <?php if(@$this->error["targetgroups"]) echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue','confman')."</p>"; ?>
+                    <?php
+                    }
+                    if(@$this->error["targetgroups"]) echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue','confman')."</p>"; ?>
                </div>
                <div data-role="fieldset">
                     <label for="item-description"><?php echo get_string('item:description','confman'); ?></label>
@@ -744,7 +748,7 @@ class mod_confman_item {
           
           ?>
           
-          <form method="POST" enctype="multipart/form-data" action="?event=<?php echo $this->event->id; ?>&id=<?php echo $this->id."&token=".$this->token;  if(isset($_GET["debug"])) echo "&debug=".$_GET["debug"]; ?>" data-ajax="false">
+          <form method="POST" enctype="multipart/form-data" action="?event=<?php echo $this->event->id; ?>&id=<?php echo $this->id."&token=".$this->token;  if($this->debug) echo "&debug=".$this->debug; ?>" data-ajax="false">
                <input type="hidden" name="store_comment" value="1">
                <h3><?php echo get_string('comment:add','confman'); ?></h3>
                <div data-role="fieldset">
@@ -764,7 +768,8 @@ class mod_confman_item {
           if(!$this->can_manage && !$this->can_rate && !$this->had_token)
                return;
           
-          if($_POST["comment"]==""){
+          $comment_str = optional_param("comment","",PARAM_TEXT);
+          if($comment_str==""){
                $this->errors++;
                $this->error["comment"] = true;
                return;
@@ -772,7 +777,7 @@ class mod_confman_item {
           $comment = new stdClass();
           $comment->eventid = $this->eventid;
           $comment->itemid = $this->id;
-          $comment->comment = $_POST["comment"];
+          $comment->comment = $comment_str;
           $comment->userid = $USER->id;
           $time = new DateTime();
           $comment->created = $time->getTimestamp();

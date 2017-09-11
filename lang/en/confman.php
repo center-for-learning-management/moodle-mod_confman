@@ -35,6 +35,8 @@ $string['event:organizer'] = 'Contact-Person';
 $string['event:contact'] = 'Contact-Mail';
 $string['event:logo'] = 'Logo';
 $string['event:submit'] = 'Store Event';
+$string['event:types'] = 'Types of Submissions';
+$string['event:targetgroups'] = 'Zielgruppen';
 
 $string['event:submissions'] = 'Submissions';
 $string['event:submission:open'] = 'Submissions open';

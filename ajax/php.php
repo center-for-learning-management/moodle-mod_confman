@@ -15,7 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Links and settings
  * @package    mod_confman
  * @copyright  2017 Digital Education Society (http://www.dibig.at)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,23 +23,27 @@ require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once("../lib.php");
 
-if(@$_GET["id"]=="") $_GET["id"] = 0;
-
-$ITEM = new mod_confman_item($_GET["id"],@$_GET["token"]);
+$action = required_param("act",PARAM_TEXT);
+$itemid = required_param("id",PARAM_INT);
+$token = optional_param("token","",PARAM_TEXT);
+$ITEM = new mod_confman_item($itemid,$token);
 
 $result = array();
 
-switch(@$_POST["act"]){
+switch($action){
      case "file_append":
-          $result["url"] = "".$ITEM->file_append(@$_POST["filename"],@$_POST["file"]);
+          $filename = required_param("filename",PARAM_TEXT);
+          $filecontent = required_param("file",PARAM_RAW);
+          $result["url"] = "".$ITEM->file_append($filename,$filecontent);
           if($result["url"]!="")
                $result["status"] = "ok";
           else
                $result["status"] = "error";
      break;
      case "file_delete":
-          $chk = $ITEM->file_delete($_POST["filename"]);
-          $result["delete_file"] = $_POST["filename"];
+          $filename = required_param("filename",PARAM_TEXT);
+          $chk = $ITEM->file_delete($filename);
+          $result["delete_file"] = $filename;
           if($chk)
                $result["status"] = "ok";
           else
