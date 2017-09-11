@@ -412,6 +412,8 @@ class mod_confman_item {
           $subject = get_string('mail:subject:'.$type,'confman');
 
           email_to_user($toUser, $fromUser, $subject, $messagetext, $messagehtml, "", true);
+          // and vice versa
+          email_to_user($fromUser, $toUser, $subject, $messagetext, $messagehtml, "", true);
           
           if($this->debug){
                print_r($toUser);

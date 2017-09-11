@@ -30,7 +30,7 @@ require_once($CFG->dirroot.'/mod/confman/lib.php');
 class mod_confman_mod_form extends moodleform_mod {
  
     function definition() {
-        global $CFG, $DB, $OUTPUT;
+        global $CFG, $DB, $OUTPUT, $COURSE;
 
         $mform =& $this->_form;
         
@@ -62,17 +62,7 @@ class mod_confman_mod_form extends moodleform_mod {
         //$mform->setType('title', PARAM_TEXT);
         $mform->addRule('submissionend', null, 'required', null, 'client');
  
-        $description_args = array(
-              'subdirs'=>0,
-              'maxbytes'=>0,
-              'maxfiles'=>0,
-              'changeformat'=>0,
-              'context'=>null,
-              'noclean'=>0,
-              'trusttext'=>0,
-              'enable_filemanagement' => false,
-            );
-        $mform->addElement('editor', 'description', get_string('event:description', 'confman'),$description_args);
+        $mform->addElement('textarea', 'description', get_string('event:description', 'confman'),array('style' => 'width: 100%'));
         $mform->setType('description', PARAM_RAW);
         
         $mform->addElement('textarea', 'targetgroups', get_string('event:targetgroups', 'confman'),array('style' => 'width: 100%'));
