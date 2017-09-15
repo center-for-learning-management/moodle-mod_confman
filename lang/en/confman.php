@@ -113,17 +113,17 @@ $string['mail:thankyou:mail'] = 'Dear Contributor,<br /><br />
      You can now upload files to your submission until {data:event:submissionend_readable}. Please make sure to licence your materials under a Creative Commons Licence
      and include the licence information inside your materials.<br /><br />
      Kind regards on behalf of the comittee!';
-     
+
 $string['mail:thankyou:comment'] = 'Dear Contributor,<br /><br />
      A comment was added to your submission!<br /><br />
      Kind regards on behalf of the comittee!';
-     
+
 $string['mail:thankyou:file_append'] = 'Dear Contributor,<br /><br />
      Thank you for uploading a file to your submission!<br /><br />
      You can upload additional files to your submission until {data:event:submissionend_readable}. Please make sure to licence your materials under a Creative Commons Licence
      and include the licence information inside your materials.<br /><br />
      Kind regards on behalf of the comittee!';
-     
+
 $string['mail:thankyou:file_delete'] = 'Dear Contributor,<br /><br />
      You removed a file from your submission!<br /><br />
      You can upload files to your submission until {data:event:submissionend_readable}. Please make sure to licence your materials under a Creative Commons Licence

@@ -21,64 +21,59 @@
  */
 
 if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
+    die('Direct access to this script is forbidden.');
 }
- 
+
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/confman/lib.php');
- 
+
 class mod_confman_mod_form extends moodleform_mod {
- 
-    function definition() {
+    public function definition() {
         global $CFG, $DB, $OUTPUT, $COURSE;
 
         $mform =& $this->_form;
-        
-        $mform->addElement('text', 'name', get_string('event:name', 'confman'), array('size'=>'64'));
+
+        $mform->addElement('text', 'name', get_string('event:name', 'confman'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', null, 'required', null, 'client');
-        
-        $mform->addElement('text', 'event_organizer', get_string('event:organizer', 'confman'), array('size'=>'64'));
+
+        $mform->addElement('text', 'event_organizer', get_string('event:organizer', 'confman'), array('size' => '64'));
         $mform->setType('event_organizer', PARAM_TEXT);
         $mform->addRule('event_organizer', null, 'required', null, 'client');
-  
-        $mform->addElement('text', 'event_contact', get_string('event:contact', 'confman'), array('size'=>'64'));
+
+        $mform->addElement('text', 'event_contact', get_string('event:contact', 'confman'), array('size' => '64'));
         $mform->setType('event_contact', PARAM_TEXT);
         $mform->addRule('event_contact', null, 'required', null, 'client');
 
         $utime = new DateTime("now", core_date::get_user_timezone_object());
         $utz = $utime->getTimezone();
-        $startend_args = array(
-               'startyear'=>date("Y"),
-               'stopyear'=>date("Y")+5,
-               'timezone'=>floor($utz->getOffset(new DateTime("now"))/60/60),
-               'step'=>5
+        $startendargs = array(
+               'startyear' => date("Y"),
+               'stopyear' => date("Y") + 5,
+               'timezone' => floor($utz->getOffset(new DateTime("now")) / 60 / 60),
+               'step' => 5
             );
-        $mform->addElement('date_time_selector', 'submissionstart', get_string('event:submissionstart', 'confman'), $startend_args);
-        //$mform->setType('title', PARAM_TEXT);
-        $mform->addRule('submissionstart', null, 'required', null, 'client');       
-        
-        $mform->addElement('date_time_selector', 'submissionend', get_string('event:submissionend', 'confman'), $startend_args);
-        //$mform->setType('title', PARAM_TEXT);
-        $mform->addRule('submissionend', null, 'required', null, 'client');
- 
-        $mform->addElement('textarea', 'description', get_string('event:description', 'confman'),array('style' => 'width: 100%'));
-        $mform->setType('description', PARAM_RAW);
-        
-        $mform->addElement('textarea', 'targetgroups', get_string('event:targetgroups', 'confman'),array('style' => 'width: 100%'));
-        $mform->setType('targetgroups', PARAM_RAW);
-        $mform->setDefault('targetgroups',"digi.komp 4#Primarstufe\ndigi.komp 8#Sekundarstufe I\ndigi.komp 12#Sekundarstufe II\ndigi.komp P#Lehrer/innenfortbildung");
-        
-        $mform->addElement('textarea', 'types', get_string('event:types', 'confman'),array('style' => 'width: 100%'));
-        $mform->setType('types', PARAM_RAW);
-        $mform->setDefault('types',"Vortrag\nWorkshop");
+        $mform->addElement('date_time_selector', 'submissionstart', get_string('event:submissionstart', 'confman'), $startendargs);
+        $mform->addRule('submissionstart', null, 'required', null, 'client');
 
- 
-        //$mform->addElement('filepicker', 'logo', get_string('event:logo','confman'), null, array('maxbytes' => 50*1024, 'accepted_types' => 'image'));
- 
+        $mform->addElement('date_time_selector', 'submissionend', get_string('event:submissionend', 'confman'), $startendargs);
+        $mform->addRule('submissionend', null, 'required', null, 'client');
+
+        $mform->addElement('textarea', 'description', get_string('event:description', 'confman'), array('style' => 'width: 100%'));
+        $mform->setType('description', PARAM_RAW);
+
+        $mform->addElement('textarea', 'targetgroups', get_string('event:targetgroups', 'confman'),
+                array('style' => 'width: 100%'));
+        $mform->setType('targetgroups', PARAM_RAW);
+        $mform->setDefault('targetgroups', "digi.komp 4#Primarstufe\ndigi.komp 8#Sekundarstufe I\n".
+                "digi.komp 12#Sekundarstufe II\ndigi.komp P#Lehrer/innenfortbildung");
+
+        $mform->addElement('textarea', 'types', get_string('event:types', 'confman'), array('style' => 'width: 100%'));
+        $mform->setType('types', PARAM_RAW);
+        $mform->setDefault('types', "Vortrag\nWorkshop");
+
         $this->standard_coursemodule_elements();
- 
+
         $this->add_action_buttons();
     }
 }
-

@@ -20,11 +20,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-function xmldb_confman_upgrade($oldversion){
-     global $DB;
-     $dbman = $DB->get_manager();
+defined('MOODLE_INTERNAL') || die;
 
-     if($oldversion < 2017091104) {
+function xmldb_confman_upgrade($oldversion) {
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2017091104) {
 
         // Define field event_organizer to be added to confman.
         $table = new xmldb_table('confman');
@@ -34,14 +36,22 @@ function xmldb_confman_upgrade($oldversion){
         $field4 = new xmldb_field('types', XMLDB_TYPE_TEXT, null, null, null, null, null, 'targetgroups');
 
         // Conditionally launch add field event_organizer.
-        if (!$dbman->field_exists($table, $field1)) $dbman->add_field($table, $field1);
-        if (!$dbman->field_exists($table, $field2)) $dbman->add_field($table, $field2);
-        if (!$dbman->field_exists($table, $field3)) $dbman->add_field($table, $field3);
-        if (!$dbman->field_exists($table, $field4)) $dbman->add_field($table, $field4);
+        if (!$dbman->field_exists($table, $field1)) {
+            $dbman->add_field($table, $field1);
+        }
+        if (!$dbman->field_exists($table, $field2)) {
+            $dbman->add_field($table, $field2);
+        }
+        if (!$dbman->field_exists($table, $field3)) {
+            $dbman->add_field($table, $field3);
+        }
+        if (!$dbman->field_exists($table, $field4)) {
+            $dbman->add_field($table, $field4);
+        }
 
         // Confman savepoint reached.
         upgrade_mod_savepoint(true, 2017091104, 'confman');
-     }
-     
-     return true;
+    }
+
+    return true;
 }

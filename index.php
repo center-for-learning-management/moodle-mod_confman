@@ -21,50 +21,70 @@
  */
 
 require_once('../../config.php');
+require_once($CFG->libdir.'/adminlib.php');
+
+/*
+ * This page can be accessed by users that are not logged in
+ * Permission to modifiy an item or manage files depends
+ * on the capability of a user (if logged in) or if the user
+ * new a secret token that is specific to a certain item in
+ * the database.
+ *
+ * All permission-checks are done in the constructor of mod_confman_item
+ */
+
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/confman/lib.php');
 
 $navigation = "<a href=\"#panel\" data-role=\"button\" data-icon=\"bars\">Entries</a>";
 
-required_param("event",PARAM_INT);
+/*
+ *  We just check if this parameter is given, it is needed in the constructor of mod_confman_event
+ *  which is created by mod_confman_item.
+ */
+required_param("event", PARAM_INT);
+$itemid = optional_param("id", 0, PARAM_INT);
+$token = optional_param("token", "", PARAM_TEXT);
 
-$itemid = optional_param("id",0,PARAM_INT);
-$token = optional_param("token","",PARAM_TEXT);
-$ITEM = new mod_confman_item($itemid,$token);
-
-
+$item = new mod_confman_item($itemid, $token);
+// Now that we have created our item we check if we are allowed to access.
+if (!$item->can_edit && !$item->can_view) {
+    $OUTPUT->header();
+    echo "<p>Permission denied</p>";
+    echo $OUTPUT->footer();
+    exit;
+}
 
 ?><DOCTYPE html>
 <html>
      <head>
-          <title><?php echo get_string('pluginname','confman'); ?></title>
-          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/jquery.mobile-1.4.5/jquery.mobile-1.4.5.min.css" />
-          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/jquery.mobile-1.4.5/confman.min.css" />
-          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/jquery.mobile-1.4.5/jquery.mobile.icons.min.css" />
-          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/ajax/css.css" />
-          <script src="<?php echo $CFG->wwwroot; ?>/mod/confman/jquery.mobile-1.4.5/jquery-1.11.1.min.js"></script>
-          <script src="<?php echo $CFG->wwwroot; ?>/mod/confman/jquery.mobile-1.4.5/jquery.mobile-1.4.5.min.js"></script>
-          <script src="<?php echo $CFG->wwwroot; ?>/mod/confman/ajax/js.js"></script>
+          <title><?php echo get_string('pluginname', 'confman'); ?></title>
+          <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+          <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+          <script src="<?php echo $CFG->wwwroot; ?>/mod/confman/script/js.js"></script>
+          <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/style/confman.min.css" />
+          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/style/main.css" />
      </head>
      <body>
           <div data-role="page" id="item">
                <div data-role="header">
-                    <h1><?php echo $ITEM->title; ?></h1>
+                    <h1><?php echo $item->title; ?></h1>
                </div>
                <div role="main" class="ui-content">
 <?php
 
-if($ITEM->id>0){
-     if($ITEM->had_token){
-          $ITEM->form();
-     } else {
-          $ITEM->html();
-     }
+if ($item->id > 0) {
+    if ($item->had_token) {
+        $item->form();
+    } else {
+        $item->html();
+    }
 } else {
-     $ITEM->form();
+    $item->form();
 }
 
-$ITEM->comments();
+$item->comments();
 
 ?>
                

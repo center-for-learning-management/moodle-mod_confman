@@ -21,19 +21,30 @@
  */
 
 require('../../config.php');
-require_once('lib.php');
+$cmid = required_param('id', PARAM_INT);
+$cm = get_coursemodule_from_id('confman', $cmid, 0, false, MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
  
-$id = required_param('id', PARAM_INT);
-list ($course, $cm) = get_course_and_cm_from_cmid($id, 'confman');
-$confman = new mod_confman_event($cm->instance);
-
-
 require_login($course, true, $cm);
-
 $PAGE->set_url('/mod/confman/view.php', array('id' => $cm->id));
 $PAGE->set_title(get_string('modulename', 'confman'));
 $PAGE->set_heading(get_string('modulename', 'confman'));
 $PAGE->set_pagelayout('standard');
+
+$context = context_course::instance($course->id);
+$canmanage = (has_capability('mod/confman:manage', $context));
+$canrate = (has_capability('mod/confman:rate', $context));
+
+if (!$canmanage && !$canrate) {
+    $OUTPUT->header();
+    echo "<p>Permission denied</p>";
+    echo $OUTPUT->footer();
+    exit;
+}
+
+require_once('lib.php');
+$confman = new mod_confman_event($cm->instance);
+
 
 echo $OUTPUT->header();
 
@@ -44,5 +55,3 @@ echo $OUTPUT->header();
 $confman->html();
 
 echo $OUTPUT->footer();
-
-?>

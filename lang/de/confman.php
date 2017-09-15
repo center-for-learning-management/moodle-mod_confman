@@ -111,25 +111,25 @@ $string['mail:subject:file_delete'] = 'Datei gelöscht';
 
 $string['mail:thankyou:mail'] = 'Sg. Referentin, Sg. Referent!<br /><br />
      Vielen Dank für Ihre Einreichung!<br /><br />
-     Sie können nun Dateien zu Ihrem Beitrag auf der Plattform bis einschließlich {data:event:submissionend_readable} hochladen. 
+     Sie können nun Dateien zu Ihrem Beitrag auf der Plattform bis einschließlich {data:event:submissionend_readable} hochladen.
      Bitte beachten Sie, Ihre Unterlagen mit der entsprechenden CC Lizenz zu versehen - bzw. dies bei Ihren Unterlagen nachzubessern.<br /><br />
      Nochmals Vielen Dank für Ihre Einreichung und Ihr Referat!<br /><br />
      Herzliche Grüße im Namen des Organisationsteams!';
-     
+
 $string['mail:thankyou:comment'] = 'Sg. Referentin, Sg. Referent!<br /><br />
      Es wurde ein Kommentar bei Ihrer Einreichung gespeichert!<br /><br />
      Herzliche Grüße im Namen des Organisationsteams!';
-     
+
 $string['mail:thankyou:file_append'] = 'Sg. Referentin, Sg. Referent!<br /><br />
      Vielen Dank für den Upload einer Datei!<br /><br />
-     Sie können innerhalb des Bearbeitungszeitraums, also bis einschließlich {data:event:submissionend_readable} hochladen, oder die vorhandenen wieder entfernen. 
+     Sie können innerhalb des Bearbeitungszeitraums, also bis einschließlich {data:event:submissionend_readable} hochladen, oder die vorhandenen wieder entfernen.
      Bitte beachten Sie, Ihre Unterlagen mit der entsprechenden CC Lizenz zu versehen - bzw. dies bei Ihren Unterlagen nachzubessern.<br /><br />
      Nochmals Vielen Dank für Ihre Einreichung und Ihr Referat!<br /><br />
      Herzliche Grüße im Namen des Organisationsteams!';
-     
+
 $string['mail:thankyou:file_delete'] = 'Sg. Referentin, Sg. Referent!<br /><br />
      Sie haben eine Datei gelöscht!<br /><br />
-     Sie können innerhalb des Bearbeitungszeitraums, also bis einschließlich {data:event:submissionend_readable} hochladen, oder die vorhandenen wieder entfernen. 
+     Sie können innerhalb des Bearbeitungszeitraums, also bis einschließlich {data:event:submissionend_readable} hochladen, oder die vorhandenen wieder entfernen.
      Bitte beachten Sie, Ihre Unterlagen mit der entsprechenden CC Lizenz zu versehen - bzw. dies bei Ihren Unterlagen nachzubessern.<br /><br />
      Nochmals Vielen Dank für Ihre Einreichung und Ihr Referat!<br /><br />
      Herzliche Grüße im Namen des Organisationsteams!';
