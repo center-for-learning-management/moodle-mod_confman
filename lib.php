@@ -177,7 +177,11 @@ class mod_confman_item {
             $this->data = new stdClass();
         }
 
-        $this->eventid = @$this->data->event || optional_param("event", 0, PARAM_INT);
+        if ($this->id > 0) {
+            $this->eventid = @$this->data->event;
+        } else {
+            $this->eventid = optional_param("event", 0, PARAM_INT);
+        }
         $this->event = new mod_confman_event($this->eventid);
         $this->event->submissionstart_readable = date("Y-m-d, H:i:s", $this->event->submissionstart);
         $this->event->submissionend_readable = date("Y-m-d, H:i:s", $this->event->submissionend);
@@ -320,7 +324,7 @@ class mod_confman_item {
     }
 
     private function manage_link() {
-        return $this->confman.'index.php?event='.$this->event->id.'&id='.$this->id.'&token='.$this->data->token;
+        return $this->confman.'index.php?event='.$this->event->id.'&id='.$this->id.'&token='.@$this->data->token;
     }
 
     public function mail($type = "mail") {
