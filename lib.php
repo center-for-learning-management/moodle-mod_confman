@@ -236,7 +236,12 @@ class mod_confman_item {
         }
 
         if (optional_param("store", 0, PARAM_INT) == 1) {
-            $this->store();
+            if ($_SESSION["itemcheck"] == optional_param("itemcheck", 0, PARAM_INT)) {
+                $this->store();
+            } else {
+                $this->errors++;
+                $this->error['itemcheck'] = true;   
+            }
         }
         if (optional_param("store_comment", 0, PARAM_INT) == 1) {
             $this->comment_store();
@@ -285,6 +290,7 @@ class mod_confman_item {
             $this->data->token = md5(date("Y-m-d H:i:s").rand(0, 1000));
             $this->token = $this->data->token;
         }
+
         $this->manageLink = $this->manage_link();
 
         if (strlen($this->data->email) < 5 || strpos($this->data->email, "@") < 2 || strrpos($this->data->email, ".") < 4) {
@@ -373,8 +379,8 @@ class mod_confman_item {
             $files[] = "<li>".get_string("none", "confman")."</li>";
         }
         $dbcomments = $DB->get_records_sql(
-            'SELECT * FROM {confman_comments} WHERE eventid=? ORDER BY created DESC',
-            array($this->eventid)
+            'SELECT * FROM {confman_comments} WHERE eventid=? AND itemid=? ORDER BY created DESC',
+            array($this->eventid, $this->id)
         );
         $comments = array();
         if (count($dbcomments) > 0) {
@@ -584,14 +590,15 @@ class mod_confman_item {
                 ?>
                 <label>
                     <input data-role="none" type="checkbox" name="types[]" value="<?php echo $type; ?>"
-                        <?php echo ((@in_array($type, $this->data->types)) ? "checked=\"checked\"" : ""); ?> />
+                        <?php echo ((in_array($type, $this->data->types)) ? "checked=\"checked\"" : ""); ?> />
                     <?php echo $type; ?>
                 </label>
                 <?php
-                }
+                } // End foreach types.
                 if (@$this->error["types"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                }?>
+                    echo "<p class=\"alert alert-error\">" . get_string('item:invalidvalue', 'confman') . "</p>";
+                }
+                ?>
             </div>
             <div data-role="fieldset">
                 <label for="item-targetgroup"><?php echo get_string('item:targetgroup', 'confman'); ?></label>
@@ -609,7 +616,7 @@ class mod_confman_item {
                 <?php
                 }
                 if (@$this->error["targetgroups"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
+                    echo "<p class=\"alert alert-error\">" . get_string('item:invalidvalue', 'confman') . "</p>";
                 } ?>
             </div>
             <div data-role="fieldset">
@@ -625,6 +632,25 @@ class mod_confman_item {
                 <textarea name="memo" id="item-memo"><?php echo @$this->data->memo; ?></textarea>
                 <?php
                 if (@$this->error["memo"]) {
+                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
+                } ?>
+            </div>
+            <div data-role="fieldset">
+                <label for="item-check"><?php echo get_string('item:check','confman'); ?></label>
+                <p><?php
+                $calcs = array("+" , "-");
+                $z1 = rand(10,20);
+                $z2 = rand(1,10);
+                $calc = rand(0, count($calcs) - 1);
+                $calc = $z1 . " " . $calcs[$calc] . " " . $z2;
+                
+                $_SESSION["itemcheck"] = eval("return " . $calc . ";");
+                echo $calc . " =";
+                ?>
+                <input type="numerical" id="item-check" name="itemcheck"/>
+                </p>
+                <?php
+                if (@$this->error["itemcheck"]) {
                     echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
                 } ?>
             </div>

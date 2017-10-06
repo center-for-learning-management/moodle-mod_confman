@@ -86,6 +86,8 @@ $string['item:obsolete'] = 'Submission deadline exceeded. You can not submit/mod
 $string['item:file:infostorefirst'] = 'Please store your submission once before you can attach files!';
 $string['item:you_can_modify'] = 'You can modify this data using the following link';
 
+$string['item:check'] = 'Prove you are a human';
+
 $string['comments'] = 'Comments';
 $string['comment:add'] = 'Add comment';
 $string['comment:store'] = 'Save comment';

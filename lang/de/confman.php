@@ -86,6 +86,8 @@ $string['item:obsolete'] = 'Der Zeitraum für Einreichungen ist abgelaufen. Sie 
 $string['item:file:infostorefirst'] = 'Bitte speichern Sie Ihren Beitrag einmal, bevor Sie Dateien hinzufügen!';
 $string['item:you_can_modify'] = 'Sie können die Daten mit folgendem Link vewalten';
 
+$string['item:check'] = 'Mensch oder Maschine?';
+
 $string['comments'] = 'Kommentare';
 $string['comment:add'] = 'Kommentar hinzufügen';
 $string['comment:store'] = 'Kommentar speichern';
