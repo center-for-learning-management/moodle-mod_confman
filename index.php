@@ -36,24 +36,15 @@ require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/confman/lib.php');
 
-$navigation = "<a href=\"#panel\" data-role=\"button\" data-icon=\"bars\">Entries</a>";
-
 /*
  *  We just check if this parameter is given, it is needed in the constructor of mod_confman_event
  *  which is created by mod_confman_item.
  */
 required_param("event", PARAM_INT);
 $itemid = optional_param("id", 0, PARAM_INT);
-$token = optional_param("token", "", PARAM_TEXT);
+$token = optional_param("token", "", PARAM_ALPHANUMEXT);
 
 $item = new mod_confman_item($itemid, $token);
-// Now that we have created our item we check if we are allowed to access.
-if (!$item->can_edit && !$item->can_view) {
-    $OUTPUT->header();
-    echo "<p>Permission denied</p>";
-    echo $OUTPUT->footer();
-    exit;
-}
 
 ?><DOCTYPE html>
 <html>
@@ -67,6 +58,14 @@ if (!$item->can_edit && !$item->can_view) {
           <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/style/main.css" />
      </head>
      <body>
+<?php
+
+// Now that we have created our item we check if we are allowed to access.
+if (!$item->can_edit && !$item->can_view) {
+    $OUTPUT->header();
+    echo "<p>Permission denied</p>";
+} else {
+?>
           <div data-role="page" id="item">
                <div data-role="header">
                     <h1><?php echo $item->title; ?></h1>
@@ -74,21 +73,24 @@ if (!$item->can_edit && !$item->can_view) {
                <div role="main" class="ui-content">
 <?php
 
-if ($item->id > 0) {
-    if ($item->had_token) {
-        $item->form();
+    if ($item->id > 0) {
+        if ($item->had_token) {
+            $item->form();
+        } else {
+            $item->html();
+        }
     } else {
-        $item->html();
+        $item->form();
     }
-} else {
-    $item->form();
-}
 
-$item->comments();
+    $item->comments();
 
 ?>
                
                </div>
           </div>
+<?php
+} // Ends else if can_edit and can_view.
+?>
      </body>
 </html>

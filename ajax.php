@@ -33,9 +33,9 @@ require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/confman/lib.php');
 $PAGE->set_context(context_system::instance());
 
-$action = required_param("act", PARAM_TEXT);
+$action = required_param("act", PARAM_ALPHANUMEXT);
 $itemid = required_param("id", PARAM_INT);
-$token = optional_param("token", "", PARAM_TEXT);
+$token = optional_param("token", "", PARAM_ALPHANUMEXT);
 
 $item = new mod_confman_item($itemid, $token);
 // Now that we have created our item we check if we are allowed to access.
@@ -50,7 +50,7 @@ $result = array();
 
 switch($action){
     case "file_append":
-        $filename = required_param("filename", PARAM_TEXT);
+        $filename = required_param("filename", PARAM_ALPHANUMEXT);
         $filecontent = required_param("file", PARAM_RAW);
         $result["url"] = "".$item->file_append($filename, $filecontent);
         if ($result["url"] != "") {
@@ -60,7 +60,7 @@ switch($action){
         }
     break;
     case "file_delete":
-        $filename = required_param("filename", PARAM_TEXT);
+        $filename = required_param("filename", PARAM_ALPHANUMEXT);
         $chk = $item->file_delete($filename);
         $result["delete_file"] = $filename;
         if ($chk) {

@@ -44,7 +44,7 @@ if (!$canmanage && !$canrate) {
 
 require_once('lib.php');
 $confman = new mod_confman_event($cm->instance);
-
+$confman->cmid = $cmid;
 
 echo $OUTPUT->header();
 
@@ -52,6 +52,17 @@ echo $OUTPUT->header();
           <link rel="stylesheet" href="style/main.css" />
 <?php
 
-$confman->html();
+$act = optional_param("act", "", PARAM_TEXT);
+switch ($act) {
+    case "listall":
+        $items = $DB->get_records('confman_items', array('event' => $confman->id));
+        foreach($items AS $item) {
+            $it = new mod_confman_item($item->id);
+            $it->html();
+        }
+    break;
+    default:
+        $confman->html();
+}
 
 echo $OUTPUT->footer();

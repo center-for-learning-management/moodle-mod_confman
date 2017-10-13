@@ -52,6 +52,10 @@ class mod_confman_event {
         $this->context = context_course::instance($this->course);
 
         $this->logo = $this->logo_url();
+        
+        $this->submissionstart_readable = date("Y-m-d, H:i:s", $this->submissionstart);
+        $this->submissionend_readable = date("Y-m-d, H:i:s", $this->submissionend);
+        $this->cmid = 0;
     }
     public function logo_url() {
         $fs = get_file_storage();
@@ -100,6 +104,7 @@ class mod_confman_event {
         $items = $DB->get_records('confman_items', array('event' => $this->id)); ?>
         
         <h3><?php echo get_string('event:submissions', 'confman'); ?></h3>
+        <a href="view.php?id=<?php echo $this->cmid; ?>&act=listall" data-role="button" data-icon="action"><?php echo get_string('event:listall','confman'); ?></a>
         <ul class="confman_list" data-role="listview" data-filter="true" data-split-icon="gear" data-inset="true">
         <?php
         foreach ($items as $item) {
@@ -160,8 +165,10 @@ class mod_confman_item {
     public function __construct($id, $token="") {
         global $DB, $CFG;
         $this->debug = optional_param("debug", 0, PARAM_INT);
+        $this->itemcheck = cache::make('mod_confman', 'itemcheck');
+        $this->hadtokenfor = cache::make('mod_confman', 'hadtokenfor');
 
-        $this->confman = $CFG->wwwroot.'/mod/confman/';
+        $this->confman = $CFG->wwwroot . '/mod/confman/';
         $this->id = $id;
         $this->token = $token;
 
@@ -183,20 +190,19 @@ class mod_confman_item {
             $this->eventid = optional_param("event", 0, PARAM_INT);
         }
         $this->event = new mod_confman_event($this->eventid);
-        $this->event->submissionstart_readable = date("Y-m-d, H:i:s", $this->event->submissionstart);
-        $this->event->submissionend_readable = date("Y-m-d, H:i:s", $this->event->submissionend);
 
         $time = new DateTime("now");
-        $this->is_obsolete = ($this->id > 0 && $time->getTimestamp() > $this->event->submissionend);
+        $this->is_obsolete = ($time->getTimestamp() > $this->event->submissionend);
 
+        $vars = array('contents', 'targetgroups', 'description', 'types', 'organization', 'title_pre', 'title_post', 'memo');
         $c = @json_decode($this->data->contents);
-        $this->data->targetgroups = @$c->targetgroups;
-        $this->data->description = @$c->description;
-        $this->data->types = @$c->types;
-        $this->data->organization = @$c->organization;
-        $this->data->title_pre = @$c->title_pre;
-        $this->data->title_post = @$c->title_post;
-        $this->data->memo = @$c->memo;
+        foreach($vars AS $var) {
+            if (isset($c->{$var})) {
+                $this->data->{$var} = $c->{$var};
+            } else {
+                $this->data->{$var} = '';
+            }
+        }
 
         if (!is_array($this->data->targetgroups)) {
             $this->data->targetgroups = array();
@@ -227,16 +233,18 @@ class mod_confman_item {
             var_dump($this);
         }
 
-        // If we have access to this item we store this in SESSION to enable downloading of files.
+        // If we have access to this item we store this in CACHE to enable downloading of files.
         if ($this->can_view || $this->can_edit) {
-            if (!isset($_SESSION["mod_confman_hadtoken_for"])) {
-                $_SESSION["mod_confman_hadtoken_for"] = array();
+            $hadtokenfor = $this->hadtokenfor->get('hadtokenfor');
+            if (!$hadtokenfor) {
+                $hadtokenfor = array();
             }
-            $_SESSION["mod_confman_hadtoken_for"][] = $this->id;
+            $hadtokenfor[] = $this->id;
+            $this->hadtokenfor->set('hadtokenfor', $hadtokenfor);
         }
 
         if (optional_param("store", 0, PARAM_INT) == 1) {
-            if ($_SESSION["itemcheck"] == optional_param("itemcheck", 0, PARAM_INT)) {
+            if ($this->itemcheck->get('itemcheck') == optional_param("itemcheck", 0, PARAM_INT)) {
                 $this->store();
             } else {
                 $this->errors++;
@@ -286,7 +294,7 @@ class mod_confman_item {
         if (!isset($this->data->event) || $this->data->event == 0) {
             $this->data->event = $this->event->id;
         }
-        if (@$this->data->token == "" || $this->data->token == "NULL") {
+        if (!isset($this->data->token) || $this->data->token == "" || $this->data->token == "NULL") {
             $this->data->token = md5(date("Y-m-d H:i:s").rand(0, 1000));
             $this->token = $this->data->token;
         }
@@ -486,10 +494,12 @@ class mod_confman_item {
     }
 
     public function form() {
-        if ($this->is_obsolete && !$this->can_manage) {
+        if ($this->is_obsolete) {
             echo "<p class=\"alert alert-error\">".get_string('item:obsolete', 'confman')."</p>";
-            $this->html();
-            return;
+            if (!$this->can_manage) {
+                $this->html();
+                return;
+            }
         }
         ?>
         <div class="item">
@@ -644,7 +654,7 @@ class mod_confman_item {
                 $calc = rand(0, count($calcs) - 1);
                 $calc = $z1 . " " . $calcs[$calc] . " " . $z2;
                 
-                $_SESSION["itemcheck"] = eval("return " . $calc . ";");
+                $this->itemcheck->set('itemcheck', eval("return " . $calc . ";"));
                 echo $calc . " =";
                 ?>
                 <input type="numerical" id="item-check" name="itemcheck"/>
@@ -657,7 +667,12 @@ class mod_confman_item {
                
             <input type="submit" value="<?php echo get_string('form:submit', 'confman'); ?>">
         </form>
-          
+        <?php
+        $this->file_upform();
+    }
+    
+    public function file_upform(){
+        ?>
         <h3><?php echo get_string('item:section:files', 'confman'); ?></h3>
           
         <?php
@@ -704,6 +719,10 @@ class mod_confman_item {
     }
 
     public function file_append($filename, $base64) {
+        if (!$this->had_token && !$this->can_manage) {
+            // No permission to modify files.
+            return "";
+        }
         $x = explode(";base64,", $base64);
         $content = base64_decode(@$x[1]);
 
@@ -741,6 +760,10 @@ class mod_confman_item {
     }
 
     public function file_delete($filename) {
+        if (!$this->had_token && !$this->can_manage) {
+            // No permission to modify files.
+            return false;
+        }
         $fs = get_file_storage();
 
         $file = $fs->get_file(
@@ -781,6 +804,12 @@ class mod_confman_item {
                     ?></p>
                 </div>
                 <div class="block">
+                    <p class="heading"><?php echo get_string('item:email', 'confman'); ?></p>
+                    <p><?php
+                        echo $this->data->email;
+                    ?></p>
+                </div>
+                <div class="block">
                     <p class="heading"><?php echo get_string('item:organization', 'confman'); ?></p>
                     <p><?php echo $this->data->organization; ?></p>
                 </div>
@@ -800,6 +829,11 @@ class mod_confman_item {
                     <p class="heading"><?php echo get_string('item:memo', 'confman'); ?></p>
                     <p><?php echo $this->data->memo; ?></p>
                 </div>
+                <?php
+                if ($this->had_token && $this->is_obsolete) {
+                    $this->file_upform();
+                } else {
+                ?>
                 <div class="block">
                     <p class="heading"><?php echo get_string('item:files', 'confman'); ?></p>
                     <p class="filearea">
@@ -826,13 +860,14 @@ class mod_confman_item {
                         echo get_string('none', 'confman');
                     } ?></p>
                 </div>
+                <?php
+                } // Ends else from if had_token and is_obsolete
+                ?>
             </div>
 
             <?php
-        } else {
+        } else if ($this->id > 0) {
             echo "<p>".get_string('error:view', 'confman')."</p>";
-            echo "<p><a href=\"".$this->confman."index.php?event=".$this->event->id."&id=0\">".
-                 get_string('item:submit', 'confman')."</a></p>";
         }
     }
 
@@ -958,9 +993,12 @@ function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $force
     $itemid = array_shift($args); // The first item in the $args array.
 
     // Users may want access to their submissions files even though they are not logged in to moodle.
-    // Therefore we stored in the SESSION if the user had access to the item.
+    // Therefore we stored in the CACHE if the user had access to the item.
     // Make sure the user has access to item.
-    if (!in_array($itemid, $_SESSION["mod_confman_hadtoken_for"])) {
+    
+    $cache = cache::make('mod_confman', 'hadtokenfor');
+    $hadtokenfor = $cache->get('hadtokenfor');
+    if (!$hadtokenfor || !in_array($itemid, $hadtokenfor)) {
         return false;
     }
 

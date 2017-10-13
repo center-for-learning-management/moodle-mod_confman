@@ -38,6 +38,7 @@ $string['event:submit'] = 'Event speichern';
 $string['event:types'] = 'Beitragstypen';
 $string['event:targetgroups'] = 'Zielgruppen';
 
+$string['event:listall'] = 'Alle Einreichungen auflisten';
 $string['event:submissions'] = 'Einreichungen';
 $string['event:submission:open'] = 'Einreichungen offen';
 $string['event:submission:link'] = 'Einreichungs-Link';
@@ -135,3 +136,9 @@ $string['mail:thankyou:file_delete'] = 'Sg. Referentin, Sg. Referent!<br /><br /
      Bitte beachten Sie, Ihre Unterlagen mit der entsprechenden CC Lizenz zu versehen - bzw. dies bei Ihren Unterlagen nachzubessern.<br /><br />
      Nochmals Vielen Dank für Ihre Einreichung und Ihr Referat!<br /><br />
      Herzliche Grüße im Namen des Organisationsteams!';
+
+$string['defaults:targetgroups'] = "digi.komp 4#Primarstufe\ndigi.komp 8#Sekundarstufe I\ndigi.komp 12#Sekundarstufe II\ndigi.komp P#Lehrer/innenfortbildung";
+$string['defaults:types'] = "Vortrag\nWorkshop";
+
+$string['cachedef_itemcheck'] = 'Das Ergebnis jener Berechnung, die gegen Spambots helfen soll.';
+$string['cachedef_hadtokenfor'] = 'Speichert alle ItemIDs für die der Nutzer einen Token hatte um den Download von Dateien zu ermöglichen.';

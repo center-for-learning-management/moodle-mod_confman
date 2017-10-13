@@ -36,8 +36,9 @@ $string['event:contact'] = 'Contact-Mail';
 $string['event:logo'] = 'Logo';
 $string['event:submit'] = 'Store Event';
 $string['event:types'] = 'Types of Submissions';
-$string['event:targetgroups'] = 'Zielgruppen';
+$string['event:targetgroups'] = 'Targetgroups';
 
+$string['event:listall'] = 'List all Submissions';
 $string['event:submissions'] = 'Submissions';
 $string['event:submission:open'] = 'Submissions open';
 $string['event:submission:link'] = 'Submission-Link';
@@ -131,3 +132,9 @@ $string['mail:thankyou:file_delete'] = 'Dear Contributor,<br /><br />
      You can upload files to your submission until {data:event:submissionend_readable}. Please make sure to licence your materials under a Creative Commons Licence
      and include the licence information inside your materials.<br /><br />
      Kind regards on behalf of the comittee!';
+
+$string['defaults:targetgroups'] = "group A#Description\ngroup B#Description\ngroup C#Description\ngroup D#Description";
+$string['defaults:types'] = "Presentation\nWorkshop";
+
+$string['cachedef_itemcheck'] = 'This is result of the calculation that rejects spam bots';
+$string['cachedef_hadtokenfor'] = 'Stores all itemids that we had a token for in order to make download files possible';

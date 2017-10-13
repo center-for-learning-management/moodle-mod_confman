@@ -51,7 +51,8 @@ class mod_confman_mod_form extends moodleform_mod {
                'startyear' => date("Y"),
                'stopyear' => date("Y") + 5,
                'timezone' => floor($utz->getOffset(new DateTime("now")) / 60 / 60),
-               'step' => 5
+               'step' => 5,
+               'optional' => 0,
             );
         $mform->addElement('date_time_selector', 'submissionstart', get_string('event:submissionstart', 'confman'), $startendargs);
         $mform->addRule('submissionstart', null, 'required', null, 'client');
@@ -65,12 +66,11 @@ class mod_confman_mod_form extends moodleform_mod {
         $mform->addElement('textarea', 'targetgroups', get_string('event:targetgroups', 'confman'),
                 array('style' => 'width: 100%'));
         $mform->setType('targetgroups', PARAM_RAW);
-        $mform->setDefault('targetgroups', "digi.komp 4#Primarstufe\ndigi.komp 8#Sekundarstufe I\n".
-                "digi.komp 12#Sekundarstufe II\ndigi.komp P#Lehrer/innenfortbildung");
+        $mform->setDefault('targetgroups', get_string('defaults:targetgroups', 'confman'));
 
         $mform->addElement('textarea', 'types', get_string('event:types', 'confman'), array('style' => 'width: 100%'));
         $mform->setType('types', PARAM_RAW);
-        $mform->setDefault('types', "Vortrag\nWorkshop");
+        $mform->setDefault('types', get_string('defaults:types', 'confman'));
 
         $this->standard_coursemodule_elements();
 

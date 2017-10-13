@@ -17,7 +17,7 @@
 }
 
 .confman_list li .controls {
-     margin-top: 12px;
+    margin: 0px;
      float: right;
      width: 40px;
      height: 100%;
