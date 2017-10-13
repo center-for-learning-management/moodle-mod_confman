@@ -50,7 +50,7 @@ $result = array();
 
 switch($action){
     case "file_append":
-        $filename = required_param("filename", PARAM_ALPHANUMEXT);
+        $filename = required_param("filename", PARAM_FILE);
         $filecontent = required_param("file", PARAM_RAW);
         $result["url"] = "".$item->file_append($filename, $filecontent);
         if ($result["url"] != "") {
