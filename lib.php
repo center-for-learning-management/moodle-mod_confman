@@ -44,6 +44,7 @@ class mod_confman_event {
                 "description" => @$target[1],
             );
         }
+
         $this->types = explode("\n", $confman->types);
         for ($i = 0; $i < count($this->types); $i++) {
             $this->types[$i] = trim($this->types[$i]);
@@ -52,7 +53,7 @@ class mod_confman_event {
         $this->context = context_course::instance($this->course);
 
         $this->logo = $this->logo_url();
-        
+
         $this->submissionstart_readable = date("Y-m-d, H:i:s", $this->submissionstart);
         $this->submissionend_readable = date("Y-m-d, H:i:s", $this->submissionend);
         $this->cmid = 0;
@@ -102,7 +103,7 @@ class mod_confman_event {
     public function list_items() {
         global $DB, $CFG;
         $items = $DB->get_records('confman_items', array('event' => $this->id)); ?>
-        
+
         <h3><?php echo get_string('event:submissions', 'confman'); ?></h3>
         <a href="view.php?id=<?php echo $this->cmid; ?>&act=listall" data-role="button" data-icon="action"><?php echo get_string('event:listall','confman'); ?></a>
         <ul class="confman_list" data-role="listview" data-filter="true" data-split-icon="gear" data-inset="true">
@@ -144,6 +145,7 @@ function confman_update_instance($event) {
     global $DB, $COURSE;
     $event->id = $event->instance;
     $event->course = $COURSE->id;
+
     return $DB->update_record('confman', $event);
 }
 function confman_delete_instance($id) {
@@ -167,6 +169,8 @@ class mod_confman_item {
         $this->debug = optional_param("debug", 0, PARAM_INT);
         $this->itemcheck = cache::make('mod_confman', 'itemcheck');
         $this->hadtokenfor = cache::make('mod_confman', 'hadtokenfor');
+        $this->storedcache = cache::make('mod_confman', 'stored');
+        $this->stored = $this->storedcache->get('stored');
 
         $this->confman = $CFG->wwwroot . '/mod/confman/';
         $this->id = $id;
@@ -244,11 +248,12 @@ class mod_confman_item {
         }
 
         if (optional_param("store", 0, PARAM_INT) == 1) {
+            $this->retrieve();
             if ($this->itemcheck->get('itemcheck') == optional_param("itemcheck", 0, PARAM_INT)) {
                 $this->store();
             } else {
                 $this->errors++;
-                $this->error['itemcheck'] = true;   
+                $this->error['itemcheck'] = true;
             }
         }
         if (optional_param("store_comment", 0, PARAM_INT) == 1) {
@@ -256,8 +261,7 @@ class mod_confman_item {
         }
     }
 
-    public function store() {
-        global $DB, $_FILES;
+    public function retrieve() {
         if (isset($this->data)) {
             $this->origdata = clone($this->data);
         } else {
@@ -276,6 +280,11 @@ class mod_confman_item {
         foreach ($keys as $key) {
             $this->data->{$key} = optional_param_array($key, array(), PARAM_RAW);
         }
+    }
+
+    public function store() {
+        global $DB, $_FILES;
+
         $tz = new DateTime("now");
         if (!isset($this->data->created)) {
             $this->data->created = $tz->getTimestamp();
@@ -301,7 +310,7 @@ class mod_confman_item {
 
         $this->manageLink = $this->manage_link();
 
-        if (strlen($this->data->email) < 5 || strpos($this->data->email, "@") < 2 || strrpos($this->data->email, ".") < 4) {
+        if (filter_var($this->data->email, FILTER_VALIDATE_EMAIL)) {
             $this->errors++;
             $this->error['email'] = true;
         }
@@ -315,12 +324,15 @@ class mod_confman_item {
         if ($this->errors == 0) {
             if ($this->id > 0) {
                 $DB->update_record('confman_items', $this->data);
+                //$this->storedcache->set('stored', 1);
                 $this->stored = 1;
             } else {
                 $this->id = $DB->insert_record('confman_items', $this->data, true);
                 $relocate = true;
                 $this->token = $this->data->token;
                 $this->stored = 1;
+                $this->storedcache->set('stored', 1);
+                $this->manageLink = $this->manage_link();
             }
 
             if (isset($_FILES['file'])) {
@@ -330,7 +342,7 @@ class mod_confman_item {
             $this->mail();
 
             if ($relocate) {
-                $relocateurl = $this->manage_link();
+                $relocateurl = $this->manageLink;
                 header('Location: '.$relocateurl);
                 echo "Forward to ".$relocateurl;
             }
@@ -338,7 +350,7 @@ class mod_confman_item {
     }
 
     private function manage_link() {
-        return $this->confman.'index.php?event='.$this->event->id.'&id='.$this->id.'&token='.@$this->data->token;
+        return $this->confman . 'index.php?event=' . $this->event->id . '&id=' . $this->id . '&token=' . @$this->data->token;
     }
 
     public function mail($type = "mail") {
@@ -506,6 +518,7 @@ class mod_confman_item {
         <?php
 
         if ($this->stored > 0) {
+            $this->storedcache->set('stored', 0);
             echo "<p class=\"alert alert-success\">".
                 get_string('item:stored', 'confman').
                 "<br />".
@@ -582,7 +595,7 @@ class mod_confman_item {
                 <label for="item-email2"><?php echo get_string('item:email2', 'confman'); ?></label>
                 <input type="text" name="email2" id="item-email2" placeholder="<?php echo get_string('item:email2', 'confman'); ?>">
             </div>
-               
+
             <h3><?php echo get_string('item:section:yoursubmission', 'confman'); ?></h3>
             <div data-role="fieldset">
                 <label for="item-title"><?php echo get_string('item:title', 'confman'); ?></label>
@@ -593,7 +606,7 @@ class mod_confman_item {
                     echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
                 } ?>
             </div>
-            <div data-role="fieldset">
+            <div data-role="fieldset"<?php if(count($this->event->types) == 0 || $this->event->types[0] == '') { echo " style=\"display: none;\""; } ?>>
                 <label><?php echo get_string('item:type', 'confman'); ?></label>
                 <?php
                 foreach ($this->event->types as $type) {
@@ -610,7 +623,7 @@ class mod_confman_item {
                 }
                 ?>
             </div>
-            <div data-role="fieldset">
+            <div data-role="fieldset"<?php if(count($this->event->targetgroups) == 0 || (isset($this->event->targetgroups[0]['targetgroup']) && $this->event->targetgroups[0]['targetgroup'] == '')) { echo " style=\"display: none;\""; } ?>>
                 <label for="item-targetgroup"><?php echo get_string('item:targetgroup', 'confman'); ?></label>
 
                 <?php
@@ -653,7 +666,7 @@ class mod_confman_item {
                 $z2 = rand(1,10);
                 $calc = rand(0, count($calcs) - 1);
                 $calc = $z1 . " " . $calcs[$calc] . " " . $z2;
-                
+
                 $this->itemcheck->set('itemcheck', eval("return " . $calc . ";"));
                 echo $calc . " =";
                 ?>
@@ -664,20 +677,20 @@ class mod_confman_item {
                     echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
                 } ?>
             </div>
-               
+
             <input type="submit" value="<?php echo get_string('form:submit', 'confman'); ?>">
         </form>
         <?php
         $this->file_upform();
     }
-    
+
     public function file_upform(){
         ?>
         <h3><?php echo get_string('item:section:files', 'confman'); ?></h3>
-          
+
         <?php
         if ($this->id > 0) {
-            ?>     
+            ?>
             <div data-role="fieldset">
                 <label for="item-file"><?php echo get_string('item:file:append', 'confman'); ?></label>
                 <input type="file" name="file" id="item-file"
@@ -710,7 +723,7 @@ class mod_confman_item {
             echo "</ul>\n";
         } else { // End if $this->id>0.
         ?>
-        <p><?php echo get_string('item:file:infostorefirst', 'confman'); ?></p>    
+        <p><?php echo get_string('item:file:infostorefirst', 'confman'); ?></p>
         <?php
         } // End if $this->id>0.
         ?>
@@ -913,7 +926,7 @@ class mod_confman_item {
                 ?>
                 <li data-role="list-divider"><?php echo $comment->created_readable; ?></li>
                 <li>
-                    <p>
+                    <p style="white-space: pre;">
                         <?php echo $comment->comment; ?>
                         <?php echo $comment->user; ?>
                     </p>
@@ -995,7 +1008,7 @@ function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $force
     // Users may want access to their submissions files even though they are not logged in to moodle.
     // Therefore we stored in the CACHE if the user had access to the item.
     // Make sure the user has access to item.
-    
+
     $cache = cache::make('mod_confman', 'hadtokenfor');
     $hadtokenfor = $cache->get('hadtokenfor');
     if (!$hadtokenfor || !in_array($itemid, $hadtokenfor)) {

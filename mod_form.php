@@ -66,11 +66,11 @@ class mod_confman_mod_form extends moodleform_mod {
         $mform->addElement('textarea', 'targetgroups', get_string('event:targetgroups', 'confman'),
                 array('style' => 'width: 100%'));
         $mform->setType('targetgroups', PARAM_RAW);
-        $mform->setDefault('targetgroups', get_string('defaults:targetgroups', 'confman'));
+        $mform->setDefault('targetgroups', str_replace('*', "\n", get_string('defaults:targetgroups', 'confman')));
 
         $mform->addElement('textarea', 'types', get_string('event:types', 'confman'), array('style' => 'width: 100%'));
         $mform->setType('types', PARAM_RAW);
-        $mform->setDefault('types', get_string('defaults:types', 'confman'));
+        $mform->setDefault('types', str_replace('*', "\n", get_string('defaults:types', 'confman')));
 
         $this->standard_coursemodule_elements();
 

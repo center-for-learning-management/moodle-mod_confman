@@ -107,7 +107,7 @@ $string['confman:rate'] = 'Bewerte Beiträge';
 
 $string['none'] = 'Keine';
 
-$string['mail:subject:mail'] = $string['item:stored'];
+$string['mail:subject:mail'] = 'Ihr Beitrag wurde gespeichert!';
 $string['mail:subject:comment'] = 'Kommentar angefügt';
 $string['mail:subject:file_append'] = 'Datei angefügt';
 $string['mail:subject:file_delete'] = 'Datei gelöscht';
@@ -137,8 +137,8 @@ $string['mail:thankyou:file_delete'] = 'Sg. Referentin, Sg. Referent!<br /><br /
      Nochmals Vielen Dank für Ihre Einreichung und Ihr Referat!<br /><br />
      Herzliche Grüße im Namen des Organisationsteams!';
 
-$string['defaults:targetgroups'] = "digi.komp 4#Primarstufe\ndigi.komp 8#Sekundarstufe I\ndigi.komp 12#Sekundarstufe II\ndigi.komp P#Lehrer/innenfortbildung";
-$string['defaults:types'] = "Vortrag\nWorkshop";
+$string['defaults:targetgroups'] = 'digi.komp 4#Primarstufe*digi.komp 8#Sekundarstufe I*digi.komp 12#Sekundarstufe II*digi.komp P#Lehrer/innenfortbildung';
+$string['defaults:types'] = 'Vortrag*Workshop';
 
 $string['cachedef_itemcheck'] = 'Das Ergebnis jener Berechnung, die gegen Spambots helfen soll.';
 $string['cachedef_hadtokenfor'] = 'Speichert alle ItemIDs für die der Nutzer einen Token hatte um den Download von Dateien zu ermöglichen.';

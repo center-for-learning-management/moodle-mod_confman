@@ -107,7 +107,7 @@ $string['confman:rate'] = 'Rate ConfMan Entries';
 
 $string['none'] = 'None';
 
-$string['mail:subject:mail'] = $string['item:stored'];
+$string['mail:subject:mail'] = 'Your submission was saved!';
 $string['mail:subject:comment'] = 'Comment added';
 $string['mail:subject:file_append'] = 'File added';
 $string['mail:subject:file_delete'] = 'File removed';
@@ -133,8 +133,8 @@ $string['mail:thankyou:file_delete'] = 'Dear Contributor,<br /><br />
      and include the licence information inside your materials.<br /><br />
      Kind regards on behalf of the comittee!';
 
-$string['defaults:targetgroups'] = "group A#Description\ngroup B#Description\ngroup C#Description\ngroup D#Description";
-$string['defaults:types'] = "Presentation\nWorkshop";
+$string['defaults:targetgroups'] = 'group A#Description*group B#Description*group C#Description*group D#Description';
+$string['defaults:types'] = 'Presentation*Workshop';
 
 $string['cachedef_itemcheck'] = 'This is result of the calculation that rejects spam bots';
 $string['cachedef_hadtokenfor'] = 'Stores all itemids that we had a token for in order to make download files possible';
