@@ -169,6 +169,8 @@ class mod_confman_item {
         $this->debug = optional_param("debug", 0, PARAM_INT);
         $this->itemcheck = cache::make('mod_confman', 'itemcheck');
         $this->hadtokenfor = cache::make('mod_confman', 'hadtokenfor');
+
+        $this->stored = 0;
         $this->storedcache = cache::make('mod_confman', 'stored');
         $this->stored = $this->storedcache->get('stored');
 
@@ -178,7 +180,6 @@ class mod_confman_item {
 
         $this->errors = 0;
         $this->error = array();
-        $this->stored = 0;
 
         $entries = $DB->get_records_sql('SELECT * FROM {confman_items} WHERE id=?', array($this->id));
         foreach ($entries as $entry) {
@@ -324,7 +325,7 @@ class mod_confman_item {
         if ($this->errors == 0) {
             if ($this->id > 0) {
                 $DB->update_record('confman_items', $this->data);
-                //$this->storedcache->set('stored', 1);
+                $this->storedcache->set('stored', 1);
                 $this->stored = 1;
             } else {
                 $this->id = $DB->insert_record('confman_items', $this->data, true);
