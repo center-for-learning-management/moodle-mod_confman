@@ -310,7 +310,7 @@ class mod_confman_item {
 
         $this->manageLink = $this->manage_link();
 
-        if (filter_var($this->data->email, FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($this->data->email, FILTER_VALIDATE_EMAIL)) {
             $this->errors++;
             $this->error['email'] = true;
         }
@@ -318,7 +318,7 @@ class mod_confman_item {
         if (@$this->origdata->email != @$this->data->email) {
             if ($this->data->email != $this->data->email2) {
                 $this->errors++;
-                $this->error['email'] = true;
+                $this->error['email2'] = true;
             }
         }
         if ($this->errors == 0) {
@@ -593,7 +593,11 @@ class mod_confman_item {
             </div>
             <div data-role="fieldset">
                 <label for="item-email2"><?php echo get_string('item:email2', 'confman'); ?></label>
-                <input type="text" name="email2" id="item-email2" placeholder="<?php echo get_string('item:email2', 'confman'); ?>">
+                <input type="text" name="email2" id="item-email2" placeholder="<?php echo get_string('item:email2', 'confman'); ?>" value="<?php echo @$this->data->email2; ?>">
+                <?php
+                if (@$this->error["email2"]) {
+                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
+                } ?>
             </div>
 
             <h3><?php echo get_string('item:section:yoursubmission', 'confman'); ?></h3>
