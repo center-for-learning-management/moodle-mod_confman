@@ -26,6 +26,8 @@ $string['modulenameplural'] = 'ConfMans';
 $string['pluginname'] = 'ConfMan';
 $string['pluginadministration'] = 'ConfMan';
 $string['capability:missing'] = 'Missing required Capability';
+$string['confman:addinstance'] = 'Add ConfMan';
+$string['confman:view'] = 'View ConfMan';
 
 $string['event:name'] = 'Title';
 $string['event:description'] = 'Description';
