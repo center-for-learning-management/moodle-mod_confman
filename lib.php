@@ -24,16 +24,24 @@ defined('MOODLE_INTERNAL') || die;
 
 class mod_confman_event {
     public function __construct($id) {
-        global $DB;
-        $confman = $DB->get_record('confman', array('id' => $id), '*', MUST_EXIST);
+        global $CFG, $DB;
+        $confman = $DB->get_record('confman', array('id' => $id)); //, '*', MUST_EXIST);
+        $keys = array_keys((array)$confman);
+        foreach ($keys AS $key) {
+            $this->{$key} = $confman->{$key};
+        }
         $this->id = $id;
-        $this->course = $confman->course;
-        $this->name = $confman->name;
-        $this->description = $confman->description;
-        $this->submissionstart = $confman->submissionstart;
-        $this->submissionend = $confman->submissionend;
-        $this->event_organizer = $confman->event_organizer;
-        $this->event_contact = $confman->event_contact;
+
+        if (!empty($confman->cmid)) {
+            $this->context = context_module::instance($confman->cmid);
+            require_once($CFG->dirroot . '/lib/filelib.php');
+            $this->intro = file_rewrite_pluginfile_urls($this->intro, 'pluginfile.php', $this->context->id, 'mod_confman', 'introx', $this->id);
+        } else {
+            $this->context = context_course::instance($this->course);
+        }
+
+
+        $this->can_manage = (has_capability('mod/confman:manage', $this->context));
 
         $targetgroups = explode("\n", $confman->targetgroups);
         $this->targetgroups = array();
@@ -41,7 +49,7 @@ class mod_confman_event {
             $target = explode("#", $target);
             $this->targetgroups[] = array(
                 "targetgroup" => trim(@$target[0]),
-                "description" => @$target[1],
+                "description" => trim(@$target[1]),
             );
         }
 
@@ -49,8 +57,6 @@ class mod_confman_event {
         for ($i = 0; $i < count($this->types); $i++) {
             $this->types[$i] = trim($this->types[$i]);
         }
-
-        $this->context = context_course::instance($this->course);
 
         $this->logo = $this->logo_url();
 
@@ -74,31 +80,12 @@ class mod_confman_event {
         return "";
     }
     public function html() {
-        global $CFG;
-        $submissionstart = date("Y-m-d H:i", $this->submissionstart);
-        $submissionend = date("Y-m-d H:i", $this->submissionend);
-        $submissionlink = $CFG->wwwroot."/mod/confman/index.php?event=".$this->id;
+        global $CFG, $OUTPUT;
+        $this->_submissionstart = date("Y-m-d H:i", $this->submissionstart);
+        $this->_submissionend = date("Y-m-d H:i", $this->submissionend);
+        $this->submissionlink = $CFG->wwwroot . "/mod/confman/index.php?embedded=1&event=".$this->id;
 
-        if ($this->logo != "") { ?>
-            <img src="<?php echo $confman->logo; ?>" alt="logo" style="float: right;" />
-        <?php
-        }
-        ?>
-
-        <h1><?php echo $this->name; ?></h1>
-        <p><?php echo get_string('event:submission:open', 'confman').": ".$submissionstart." - ".$submissionend; ?></p>
-        <p><?php
-            echo get_string('event:submission:link', 'confman').
-                ": <a href=\"".$submissionlink."\" target=\"_blank\">".
-                $submissionlink."</a>";
-        ?></p>
-        <div><?php echo $this->description; ?></div>
-        <p><?php echo get_string('event:organizer', 'confman').": ".$this->event_organizer; ?></p>
-        <p><?php echo get_string('event:contact', 'confman').": ".$this->event_contact; ?></p>
-        <h3><?php echo get_string('code:embed', 'confman'); ?></h3>
-        <pre>&lt;iframe src="<?php echo $submissionlink; ?>"&gt;&lt;/iframe&gt;</pre>
-        <?php
-        $this->list_items();
+        echo $OUTPUT->render_from_template('mod_confman/event', $this);
     }
     public function list_items() {
         global $DB, $CFG;
@@ -133,81 +120,47 @@ class mod_confman_event {
     }
 }
 
-function confman_add_instance($event) {
-    global $DB, $COURSE;
-    $event->course = $COURSE->id;
-    $time = new DateTime("now");
-    $event->created = $time;
-
-    return $DB->insert_record('confman', $event);
-}
-function confman_update_instance($event) {
-    global $DB, $COURSE;
-    $event->id = $event->instance;
-    $event->course = $COURSE->id;
-
-    return $DB->update_record('confman', $event);
-}
-function confman_delete_instance($id) {
-    global $DB;
-    if (! $event = $DB->get_record('confman', 'id', $id)) {
-        return false;
-    }
-    $result = true;
-
-    if (! $DB->delete_records('confman', 'id', $event->id)) {
-        $result = false;
-    }
-
-    return $result;
-}
-
-
 class mod_confman_item {
-    public function __construct($id, $token="") {
-        global $DB, $CFG;
+    static $packed_vars = array('approved', 'contents', 'description', 'memo', 'organization', 'targetgroups', 'title_pre', 'title_post', 'types');
+    /**
+     * Constructor for confman item.
+     * @param id of item
+     * @param token (optional) to edit without login
+     * @param eventid (optional) eventid - only used when id is 0
+     */
+    public function __construct($id = 0, $token="", $eventid = 0) {
+        global $CFG, $DB, $event;
+        $eventid = $eventid || $event->id;
         $this->debug = optional_param("debug", 0, PARAM_INT);
         $this->itemcheck = cache::make('mod_confman', 'itemcheck');
         $this->hadtokenfor = cache::make('mod_confman', 'hadtokenfor');
-
-        $this->stored = 0;
-        $this->storedcache = cache::make('mod_confman', 'stored');
-        $this->stored = $this->storedcache->get('stored');
 
         $this->confman = $CFG->wwwroot . '/mod/confman/';
         $this->id = $id;
         $this->token = $token;
 
-        $this->errors = 0;
-        $this->error = array();
-
-        $entries = $DB->get_records_sql('SELECT * FROM {confman_items} WHERE id=?', array($this->id));
-        foreach ($entries as $entry) {
-            $this->data = $entry;
-        }
-        if (!isset($this->data)) {
-            $this->data = new stdClass();
-        }
-
-        if ($this->id > 0) {
-            $this->eventid = @$this->data->event;
+        if ($id > 0) {
+            $this->data = $DB->get_record('confman_items', array('id' => $this->id), '*', IGNORE_MISSING);
         } else {
-            $this->eventid = optional_param("event", 0, PARAM_INT);
+            $this->data = (object) array(
+                'id' => 0,
+                'event' => $eventid,
+                'contents' => '{}',
+            );
         }
-        $this->event = new mod_confman_event($this->eventid);
 
-        $time = new DateTime("now");
-        $this->is_obsolete = ($time->getTimestamp() > $this->event->submissionend);
+        $this->event = new mod_confman_event($this->data->event);
 
-        $vars = array('contents', 'targetgroups', 'description', 'types', 'organization', 'title_pre', 'title_post', 'memo');
-        $c = @json_decode($this->data->contents);
-        foreach($vars AS $var) {
-            if (isset($c->{$var})) {
-                $this->data->{$var} = $c->{$var};
-            } else {
-                $this->data->{$var} = '';
+        try {
+            $c = @json_decode($this->data->contents);
+            foreach(self::$packed_vars AS $var) {
+                if (!empty($c->{$var})) {
+                    $this->data->{$var} = $c->{$var};
+                } else {
+                    $this->data->{$var} = '';
+                }
             }
-        }
+        } catch(Exception $e) {}
 
         if (!is_array($this->data->targetgroups)) {
             $this->data->targetgroups = array();
@@ -216,24 +169,28 @@ class mod_confman_item {
             $this->data->types = array();
         }
 
-        $this->context = context_course::instance($this->event->course);
+        $this->context = $this->event->context;
         $this->can_manage = (has_capability('mod/confman:manage', $this->context));
         $this->can_rate = (has_capability('mod/confman:rate', $this->context));
-
         $this->had_token = ($this->token != "" && @$this->data->token == $this->token);
+        $this->is_obsolete = (time() > $this->event->submissionend);
 
         $this->can_view = ($this->had_token || $this->can_manage || $this->can_rate);
         $this->can_edit = ($this->id == 0 || $this->had_token || $this->can_manage);
 
-        if ($this->can_view && @$this->data->title != "") {
-            $this->title = $this->event->name.": ".$this->data->title;
-        } else if ($this->id == 0) {
-            $this->title = $this->event->name;
-        } else {
-            $this->title = get_string('pluginname', 'confman');
+        $this->data->files = array();
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($this->context->id, 'mod_confman', 'content', $this->id);
+        foreach ($files AS $file) {
+            if (str_replace('.', '', $file->get_filename()) != ""){
+                $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());
+                $this->data->files[] = array(
+                    'filename' => $file->get_filename(),
+                    'url' => '' . $url,
+                );
+            }
         }
 
-        $this->manageLink = $this->manage_link();
         if ($this->debug) {
             var_dump($this);
         }
@@ -248,113 +205,183 @@ class mod_confman_item {
             $this->hadtokenfor->set('hadtokenfor', $hadtokenfor);
         }
 
-        if (optional_param("store", 0, PARAM_INT) == 1) {
-            $this->retrieve();
-            if ($this->itemcheck->get('itemcheck') == optional_param("itemcheck", 0, PARAM_INT)) {
-                $this->store();
-            } else {
-                $this->errors++;
-                $this->error['itemcheck'] = true;
-            }
-        }
         if (optional_param("store_comment", 0, PARAM_INT) == 1) {
             $this->comment_store();
         }
     }
-
-    public function retrieve() {
-        if (isset($this->data)) {
-            $this->origdata = clone($this->data);
-        } else {
-            $this->origdata = new stdClass();
-        }
-        $relocate = false;
-
-        $keys = array(
-            "title_pre", "title_post", "firstname", "lastname", "email", "email2",
-            "title", "description", "organization", "memo"
+    public function get_table() {
+        $table = new html_table();
+        $table->width = '80%';
+        $table->size = array('150', '');
+        $table->data = array(
+            new html_table_row(array(get_string('item:event', 'confman'), $this->event->name)),
+            new html_table_row(array(get_string('item:title', 'confman'), $this->data->title)),
+            new html_table_row(array(get_string('item:contributor', 'confman'), '<a href="mailto:' . $this->data->email . '">' . $this->data->contributor . '</a>')),
+            new html_table_row(array(get_string('item:organization', 'confman'), $this->data->organization)),
+            new html_table_row(array(get_string('item:type', 'confman'), implode(', ', $this->data->types))),
+            new html_table_row(array(get_string('item:targetgroup', 'confman'), implode(', ', $this->data->targetgroups))),
+            new html_table_row(array(get_string('item:description', 'confman'), $this->data->description)),
+            new html_table_row(array(get_string('item:memo', 'confman'), $this->data->memo)),
+            new html_table_row(array(get_string('item:files', 'confman'), $this->get_files())),
         );
-        foreach ($keys as $key) {
-            $this->data->{$key} = optional_param($key, "", PARAM_TEXT);
+        return $table;
+    }
+    /**
+     * Returns all files of this in various formats.
+     * @param format array, csv or html, default 'html'
+     * @param delimiter between files, default ', '
+     * @return files in the desired format
+     */
+    public function get_files($format = 'html', $delimiter = ', ') {
+        switch($format) {
+            case 'html':
+                if (count($this->data->files) == 0) return get_string('none');
+                $files = array();
+                foreach ($this->data->files AS $file) {
+                    $files[] = '<a href="' . $file['url'] . '" target="_blank">' . $file['filename'] . '</a>';
+                }
+                return implode($delimiter, $files);
+            break;
+            case 'csv':
+            break;
+            case 'array':
+                return $this->data->files;
+            break;
         }
-        $keys = array("targetgroups", "types");
-        foreach ($keys as $key) {
-            $this->data->{$key} = optional_param_array($key, array(), PARAM_RAW);
+    }
+    public function get_title() {
+        $title = 'n/a';
+        if ($this->can_view && !empty($this->data->title)) {
+            $title = $this->event->name.": ".$this->data->title;
+        } else if ($this->id == 0) {
+            $title = $this->event->name;
+        } else {
+            $title = get_string('pluginname', 'confman');
+        }
+        return $this->data->title;
+    }
+
+    /**
+     * Stores a file from a base64 encoded string.
+     */
+    public function file_append($filename, $base64) {
+        if (!$this->had_token && !$this->can_manage) {
+            // No permission to modify files.
+            return "";
+        }
+        $x = explode(";base64,", $base64);
+        $content = base64_decode(@$x[1]);
+        $fs = get_file_storage();
+        $fileinfo = array(
+            'contextid' => $this->context->id, 'component' => 'mod_confman',
+            'filearea' => 'content', 'itemid' => $this->id, 'filepath' => '/',
+            'filename' => $filename, 'timecreated' => time(), 'timemodified' => time()
+        );
+        $file = $fs->get_file(
+            $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
+            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
+        );
+        // Delete it if it exists.
+        if ($file) {
+            $file->delete();
+        }
+        $fs->create_file_from_string($fileinfo, $content);
+
+        $file = $fs->get_file(
+            $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
+            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
+        );
+        $url = moodle_url::make_pluginfile_url(
+            $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
+            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
+        );
+        return $url;
+    }
+    /**
+     * Removes a specific file.
+     */
+    public function file_delete($filename) {
+        if (!$this->had_token && !$this->can_manage) {
+            // No permission to modify files.
+            return false;
+        }
+        $fs = get_file_storage();
+        $file = $fs->get_file(
+            $this->context->id, 'mod_confman', 'content',
+            $this->id, '/', $filename
+        );
+
+        if (!$file) return true;
+
+        if ($file) {
+            return $file->delete();
         }
     }
 
-    public function store() {
-        global $DB, $_FILES;
+    public function store($data, $sendmail = 1) {
+        // Remove our repatcha-replacement calculation.
+        $itemcheck = cache::make('mod_confman', 'itemcheck');
+        $itemcheck->set('itemcheck', '');
 
-        $tz = new DateTime("now");
-        if (!isset($this->data->created)) {
-            $this->data->created = $tz->getTimestamp();
-        }
-        $this->data->modified = $tz->getTimestamp();
-        $this->data->contents = json_encode(array(
-            "targetgroups" => $this->data->targetgroups,
-            "description" => $this->data->description,
-            "types" => $this->data->types,
-            "organization" => $this->data->organization,
-            "title_pre" => $this->data->title_pre,
-            "title_post" => $this->data->title_post,
-            "memo" => $this->data->memo,
-        ), JSON_NUMERIC_CHECK);
+        if (!empty($data->isitemform)) {
+            $data->description = $data->description['text'];
+            $data->memo = $data->memo['text'];
+            for($a = 0; $a < count($this->event->targetgroups); $a++) {
+                if (!empty($data->{'targetgroup_' . $a})) {
+                    $data->targetgroups[] = $this->event->targetgroups[$a]['targetgroup'];
 
-        if (!isset($this->data->event) || $this->data->event == 0) {
-            $this->data->event = $this->event->id;
-        }
-        if (!isset($this->data->token) || $this->data->token == "" || $this->data->token == "NULL") {
-            $this->data->token = md5(date("Y-m-d H:i:s").rand(0, 1000));
-            $this->token = $this->data->token;
-        }
-
-        $this->manageLink = $this->manage_link();
-
-        if (!filter_var($this->data->email, FILTER_VALIDATE_EMAIL)) {
-            $this->errors++;
-            $this->error['email'] = true;
-        }
-
-        if (@$this->origdata->email != @$this->data->email) {
-            if ($this->data->email != $this->data->email2) {
-                $this->errors++;
-                $this->error['email2'] = true;
+                }
+                unset($data->{'targetgroup_' . $a});
+            }
+            $data->types = array();
+            for($a = 0; $a < count($this->event->types); $a++) {
+                if (!empty($data->{'type_' . $a})) {
+                    $data->types[] = $this->event->types[$a];
+                }
+                unset($data->{'type_' . $a});
             }
         }
-        if ($this->errors == 0) {
-            if ($this->id > 0) {
-                $DB->update_record('confman_items', $this->data);
-                $this->storedcache->set('stored', 1);
-                $this->stored = 1;
+
+        // Pack metadata into JSON.
+        $c = (object) array();
+        foreach(self::$packed_vars AS $var) {
+            if (isset($data->{$var})) {
+                $c->{$var} = $data->{$var};
             } else {
-                $this->id = $DB->insert_record('confman_items', $this->data, true);
-                $relocate = true;
-                $this->token = $this->data->token;
-                $this->stored = 1;
-                $this->storedcache->set('stored', 1);
-                $this->manageLink = $this->manage_link();
+                $c->{$var} = '';
             }
+        }
+        $data->contents = json_encode($c);
 
-            if (isset($_FILES['file'])) {
-                $this->file_append();
-            }
+        if (empty($data->token)) {
+            $data->token = md5(date("Y-m-d H:i:s").rand(0, 1000));
+        }
 
-            $this->mail();
+        global $DB;
+        if ($data->id > 0) {
+            $mailaction = "update";
+            $DB->update_record('confman_items', $data);
+        } else {
+            $mailaction = "creation";
+            $data->created = time();
+            $data->modified = time();
+            $this->id = $DB->insert_record('confman_items', $data, true);
+        }
+        $this->data = $data;
 
-            if ($relocate) {
-                $relocateurl = $this->manageLink;
-                header('Location: '.$relocateurl);
-                echo "Forward to ".$relocateurl;
-            }
+        $this->token = $this->data->token;
+
+        if ($sendmail) {
+            $this->mail("mail", $mailaction);
         }
     }
 
-    private function manage_link() {
+    public function manage_link() {
         return $this->confman . 'index.php?event=' . $this->event->id . '&id=' . $this->id . '&token=' . @$this->data->token;
     }
 
-    public function mail($type = "mail") {
+    public function mail($type = "mail", $action = "") {
+        if (empty($this->event->{'mail_contributor_' . $action}) && empty($this->event->{'mail_organizer_' . $action})) return;
         global $CFG, $DB;
         $touser = new stdClass();
         $touser->email = $this->data->email;
@@ -428,6 +455,8 @@ class mod_confman_item {
 
         $templatelines = explode("{", $messagehtml);
         $lines = array();
+        // Required for mail-templates.
+        $this->manageLink = $this->manage_link();
 
         foreach ($templatelines as $line) {
             if (strpos($line, "}") > -1) {
@@ -494,9 +523,12 @@ class mod_confman_item {
 
         $subject = get_string('mail:subject:'.$type, 'confman');
 
-        email_to_user($touser, $fromuser, $subject, $messagetext, $messagehtml, "", true);
-        // And vice versa.
-        email_to_user($fromuser, $touser, $subject, $messagetext, $messagehtml, "", true);
+        if (!empty($this->event->{'mail_contributor_' . $action})) {
+            email_to_user($touser, $fromuser, $subject, $messagetext, $messagehtml, "", true);
+        }
+        if (!empty($this->event->{'mail_organizer_' . $action})) {
+            email_to_user($fromuser, $touser, $subject, $messagetext, $messagehtml, "", true);
+        }
 
         if ($this->debug) {
             var_dump($touser);
@@ -506,388 +538,64 @@ class mod_confman_item {
         }
     }
 
-    public function form() {
-        if ($this->is_obsolete) {
-            echo "<p class=\"alert alert-error\">".get_string('item:obsolete', 'confman')."</p>";
-            if (!$this->can_manage) {
-                $this->html();
-                return;
-            }
+    /**
+     * Prepares some data before it can be printed from mustache.
+     */
+    public function prepare_output() {
+        global $CFG;
+        $this->data->eventname = $this->event->name;
+        $this->data->contributor = $this->data->title_pre;
+        if (!empty($this->data->contributor)) $this->data->contributor .= ' ';
+        $this->data->contributor .= $this->data->firstname . ' ' . $this->data->lastname;
+        if (!empty($this->data->title_post)) $this->data->contributor .= ', ';
+        $this->data->contributor .= $this->data->title_post;
+
+        $this->data->actions = array();
+        if ($this->can_view) {
+            $this->data->actions[] = array(
+                'classname' => 'preview',
+                'icon' => 't/preview',
+                'label' => 'view',
+                'url' => $CFG->wwwroot . '/mod/confman/index.php?event=' . $this->event->id . '&id=' . $this->id . '&preview=1',
+            );
         }
-        ?>
-        <div class="item">
-        <?php
-
-        if ($this->stored > 0) {
-            $this->storedcache->set('stored', 0);
-            echo "<p class=\"alert alert-success\">".
-                get_string('item:stored', 'confman').
-                "<br />".
-                get_string('item:you_can_modify', 'confman').": <a href=\"".$this->manage_link()."\">".$this->manage_link()."</a>".
-                "</p>";
+        if ($this->can_edit) {
+            $this->data->actions[] = array(
+                'classname' => 'edit',
+                'icon' => 'i/settings',
+                'label' => 'edit',
+                'url' => $this->manage_link(),
+            );
         }
-        if ($this->errors > 0) {
-            echo "<p class=\"alert alert-error\">".get_string('item:error', 'confman')."</p>";
-        }
-
-        ?>
-        <div><?php echo $this->event->description; ?></div>
-        <form method="POST" enctype="multipart/form-data"
-              action="?event=<?php echo $this->event->id; ?>&id=<?php echo $this->id."&token=".$this->token.
-                      (($this->debug) ? "&debug=".$this->debug : ""); ?>"
-              data-ajax="false">
-            <input type="hidden" name="store" value="1">
-            <h3><?php echo get_string('item:section:personaldata', 'confman'); ?></h3>
-            <div data-role="fieldset">
-                <label for="item-title_pre"><?php echo get_string('item:title_pre', 'confman'); ?></label>
-                <input type="text" name="title_pre" id="item-title_pre" value="<?php echo @$this->data->title_pre; ?>"
-                       placeholder="<?php echo get_string('item:title_pre', 'confman'); ?>">
-                <?php
-                if (@$this->error["title_pre"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                }?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-firstname"><?php echo get_string('item:firstname', 'confman'); ?></label>
-                <input type="text" name="firstname" id="item-firstname" value="<?php echo @$this->data->firstname; ?>"
-                       placeholder="<?php echo get_string('item:firstname', 'confman'); ?>">
-                <?php
-                if (@$this->error["firstname"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-lastname"><?php echo get_string('item:lastname', 'confman'); ?></label>
-                <input type="text" name="lastname" id="item-lastname" value="<?php echo @$this->data->lastname; ?>"
-                       placeholder="<?php echo get_string('item:lastname', 'confman'); ?>">
-                <?php
-                if (@$this->error["lastname"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-title_post"><?php echo get_string('item:title_post', 'confman'); ?></label>
-                <input type="text" name="title_post" id="item-title_post" value="<?php echo @$this->data->title_post; ?>"
-                       placeholder="<?php echo get_string('item:title_post', 'confman'); ?>">
-                <?php
-                if (@$this->error["title_post"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-organization"><?php echo get_string('item:organization', 'confman'); ?></label>
-                <input type="text" name="organization" id="item-organization" value="<?php echo @$this->data->organization; ?>"
-                       placeholder="<?php echo get_string('item:organization', 'confman'); ?>">
-                <?php
-                if (@$this->error["organization"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-email"><?php echo get_string('item:email', 'confman'); ?></label>
-                <input type="text" name="email" id="item-email" value="<?php echo @$this->data->email; ?>"
-                       placeholder="<?php echo get_string('item:email', 'confman'); ?>">
-                <?php
-                if (@$this->error["email"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-email2"><?php echo get_string('item:email2', 'confman'); ?></label>
-                <input type="text" name="email2" id="item-email2" placeholder="<?php echo get_string('item:email2', 'confman'); ?>" value="<?php echo @$this->data->email2; ?>">
-                <?php
-                if (@$this->error["email2"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-
-            <h3><?php echo get_string('item:section:yoursubmission', 'confman'); ?></h3>
-            <div data-role="fieldset">
-                <label for="item-title"><?php echo get_string('item:title', 'confman'); ?></label>
-                <input type="text" name="title" id="item-title" value="<?php echo @$this->data->title; ?>"
-                       placeholder="<?php echo get_string('item:title', 'confman'); ?>">
-                <?php
-                if (@$this->error["title"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset"<?php if(count($this->event->types) == 0 || $this->event->types[0] == '') { echo " style=\"display: none;\""; } ?>>
-                <label><?php echo get_string('item:type', 'confman'); ?></label>
-                <?php
-                foreach ($this->event->types as $type) {
-                ?>
-                <label>
-                    <input data-role="none" type="checkbox" name="types[]" value="<?php echo $type; ?>"
-                        <?php echo ((in_array($type, $this->data->types)) ? "checked=\"checked\"" : ""); ?> />
-                    <?php echo $type; ?>
-                </label>
-                <?php
-                } // End foreach types.
-                if (@$this->error["types"]) {
-                    echo "<p class=\"alert alert-error\">" . get_string('item:invalidvalue', 'confman') . "</p>";
-                }
-                ?>
-            </div>
-            <div data-role="fieldset"<?php if(count($this->event->targetgroups) == 0 || (isset($this->event->targetgroups[0]['targetgroup']) && $this->event->targetgroups[0]['targetgroup'] == '')) { echo " style=\"display: none;\""; } ?>>
-                <label for="item-targetgroup"><?php echo get_string('item:targetgroup', 'confman'); ?></label>
-
-                <?php
-                foreach ($this->event->targetgroups as $target) {
-                ?>
-                <label>
-                    <input data-role="none" type="checkbox" name="targetgroups[]" value="<?php echo $target["targetgroup"]; ?>"
-                    <?php echo ((@in_array($target["targetgroup"], $this->data->targetgroups)) ? "checked=\"checked\"" : ""); ?> />
-                    <?php
-                        echo $target["targetgroup"].(($target["description"] != "") ? "(".$target["description"].")" : "");
-                    ?>
-                </label>
-                <?php
-                }
-                if (@$this->error["targetgroups"]) {
-                    echo "<p class=\"alert alert-error\">" . get_string('item:invalidvalue', 'confman') . "</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-description"><?php echo get_string('item:description', 'confman'); ?></label>
-                <textarea name="description" id="item-description"><?php echo @$this->data->description; ?></textarea>
-                <?php
-                if (@$this->error["description"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-memo"><?php echo get_string('item:memo', 'confman'); ?></label>
-                <textarea name="memo" id="item-memo"><?php echo @$this->data->memo; ?></textarea>
-                <?php
-                if (@$this->error["memo"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-            <div data-role="fieldset">
-                <label for="item-check"><?php echo get_string('item:check','confman'); ?></label>
-                <p><?php
-                $calcs = array("+" , "-");
-                $z1 = rand(10,20);
-                $z2 = rand(1,10);
-                $calc = rand(0, count($calcs) - 1);
-                $calc = $z1 . " " . $calcs[$calc] . " " . $z2;
-
-                $this->itemcheck->set('itemcheck', eval("return " . $calc . ";"));
-                echo $calc . " =";
-                ?>
-                <input type="numerical" id="item-check" name="itemcheck"/>
-                </p>
-                <?php
-                if (@$this->error["itemcheck"]) {
-                    echo "<p class=\"alert alert-error\">".get_string('item:invalidvalue', 'confman')."</p>";
-                } ?>
-            </div>
-
-            <input type="submit" value="<?php echo get_string('form:submit', 'confman'); ?>">
-        </form>
-        <?php
-        $this->file_upform();
-    }
-
-    public function file_upform(){
-        ?>
-        <h3><?php echo get_string('item:section:files', 'confman'); ?></h3>
-
-        <?php
-        if ($this->id > 0) {
-            ?>
-            <div data-role="fieldset">
-                <label for="item-file"><?php echo get_string('item:file:append', 'confman'); ?></label>
-                <input type="file" name="file" id="item-file"
-                       onchange="mod_confman.fileAppend(<?php echo $this->id; ?>,'<?php echo $this->token; ?>');" />
-            </div>
-            <?php
-            $fs = get_file_storage();
-            $files = $fs->get_area_files($this->context->id, 'mod_confman', 'content', $this->id);
-            ?>
-            <ul id="item-files" data-role="listview" data-split-icon="delete" data-inset="true">
-            <?php
-            foreach ($files as $f) {
-                if ($f->get_filename() == ".") {
-                    continue;
-                }
-                // Parameter $f is an instance of stored_file.
-                $url = moodle_url::make_pluginfile_url(
-                    $f->get_contextid(), $f->get_component(), $f->get_filearea(),
-                    $f->get_itemid(), $f->get_filepath(), $f->get_filename()
-                );
-                ?>
-                <li data-filename="<?php echo $f->get_filename(); ?>">
-                    <a href="<?php echo $url; ?>" data-ajax="false" target="_blank"><?php echo $f->get_filename(); ?></a>
-                    <a href="#" onclick="mod_confman.fileDelete(<?php
-                        echo $this->id.",'".$this->data->token."','".$f->get_filename()."'";
-                    ?>);"></a>
-                </li>
-                <?php
-            }
-            echo "</ul>\n";
-        } else { // End if $this->id>0.
-        ?>
-        <p><?php echo get_string('item:file:infostorefirst', 'confman'); ?></p>
-        <?php
-        } // End if $this->id>0.
-        ?>
-        </div>
-        <?php
-    }
-
-    public function file_append($filename, $base64) {
-        if (!$this->had_token && !$this->can_manage) {
-            // No permission to modify files.
-            return "";
-        }
-        $x = explode(";base64,", $base64);
-        $content = base64_decode(@$x[1]);
-
-        $fs = get_file_storage();
-        $fileinfo = array(
-            'contextid' => $this->context->id, 'component' => 'mod_confman',
-            'filearea' => 'content', 'itemid' => $this->id, 'filepath' => '/',
-            'filename' => $filename, 'timecreated' => time(), 'timemodified' => time()
-        );
-
-        $file = $fs->get_file(
-            $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
-            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
-        );
-
-        // Delete it if it exists.
-        if ($file) {
-            $file->delete();
-        }
-        $fs->create_file_from_string($fileinfo, $content);
-
-        $this->mail("file_append");
-
-        $file = $fs->get_file(
-            $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
-            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
-        );
-
-        $url = moodle_url::make_pluginfile_url(
-            $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
-            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
-        );
-
-        return $url;
-    }
-
-    public function file_delete($filename) {
-        if (!$this->had_token && !$this->can_manage) {
-            // No permission to modify files.
-            return false;
-        }
-        $fs = get_file_storage();
-
-        $file = $fs->get_file(
-            $this->context->id, 'mod_confman', 'content',
-            $this->id, '/', $filename
-        );
-
-        // Delete it if it exists.
-        if ($file) {
-            $file->delete();
-            $this->mail("file_delete");
-            return true;
-        } else {
-            var_dump($file);
-        }
-        return false;
-    }
-
-    public function html() {
-        if ($this->had_token || $this->can_manage || $this->can_rate) {
-            $managelink = $this->confman."index.php?event=".$this->event->id."&id=".$this->id."&token=".$this->data->token;
-            ?>
-
-            <div class="item">
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:event', 'confman'); ?></p>
-                        <p><?php echo $this->event->name; ?></p>
-                    </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:title', 'confman'); ?></p>
-                    <p><?php echo $this->data->title; ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:contributor', 'confman'); ?></p>
-                    <p><?php
-                        echo $this->data->title_pre." ".$this->data->firstname." ".
-                             $this->data->lastname." ".$this->data->title_post;
-                    ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:email', 'confman'); ?></p>
-                    <p><?php
-                        echo $this->data->email;
-                    ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:organization', 'confman'); ?></p>
-                    <p><?php echo $this->data->organization; ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:type', 'confman'); ?></p>
-                    <p><?php echo implode(", ", $this->data->types); ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:targetgroup', 'confman'); ?></p>
-                    <p><?php echo implode(", ", $this->data->targetgroups); ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:description', 'confman'); ?></p>
-                    <p><?php echo $this->data->description; ?></p>
-                </div>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:memo', 'confman'); ?></p>
-                    <p><?php echo $this->data->memo; ?></p>
-                </div>
-                <?php
-                if ($this->had_token && $this->is_obsolete) {
-                    $this->file_upform();
-                } else {
-                ?>
-                <div class="block">
-                    <p class="heading"><?php echo get_string('item:files', 'confman'); ?></p>
-                    <p class="filearea">
-                    <?php
-                    $i = 0;
-                    $fs = get_file_storage();
-                    $files = $fs->get_area_files($this->context->id, 'mod_confman', 'content', $this->id);
-                    foreach ($files as $f) {
-                        if ($f->get_filename() == ".") {
-                            continue;
-                        }
-                        $i++;
-                        $url = moodle_url::make_pluginfile_url(
-                            $this->context->id, 'mod_confman', 'content',
-                            $this->id, '/', $f->get_filename()
-                        );
-                        // Parameter $f is an instance of stored_file.
-                        ?>
-                        <a href="<?php echo $url; ?>" target="_blank" data-role="button" data-inline="true" data-icon="tag">
-                        <?php echo $f->get_filename(); ?></a>
-                        <?php
-                    }
-                    if ($i == 0) {
-                        echo get_string('none', 'confman');
-                    } ?></p>
-                </div>
-                <?php
-                } // Ends else from if had_token and is_obsolete
-                ?>
-            </div>
-
-            <?php
-        } else if ($this->id > 0) {
-            echo "<p>".get_string('error:view', 'confman')."</p>";
+        if ($this->can_manage) {
+            $icon = (!empty($this->data->approved) && $this->data->approved > 0) ? 'completion-auto-pass' : 'completion-auto-n';
+            $this->data->actions[] = array(
+                'classname' => 'approve',
+                'icon' => 'i/' . $icon,
+                'label' => get_string('approve', 'confman'),
+                'onclick' => 'var a = this; require(["mod_confman/main"], function(MAIN) { MAIN.set_approved("' . $CFG->wwwroot . '", ' . $this->id . ', "' . $this->token . '", a); }); return false;',
+                'url' => '#',
+            );
         }
     }
+
+    /**
+     * Calls set_data for a form with its own data.
+     * @param dataform object of type moodle_form
+     */
+    public function set_form_data($dataform) {
+        $data = clone($this->data);
+        $data->description = array(
+            'format' => 1,
+            'text' => $data->description,
+        );
+        $data->memo = array(
+            'format' => 1,
+            'text' => $data->memo,
+        );
+        $dataform->set_data($data);
+    }
+
 
     public function comments() {
         global $DB, $CFG;
@@ -1001,9 +709,10 @@ class mod_confman_item {
     }
 }
 
-function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options=array()) {
     // Make sure the filearea is one of those used by the plugin.
-    if ($filearea !== 'content') {
+
+    if (!in_array($filearea, array('content', 'introx'))) {
         return false;
     }
 
@@ -1016,7 +725,7 @@ function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $force
 
     $cache = cache::make('mod_confman', 'hadtokenfor');
     $hadtokenfor = $cache->get('hadtokenfor');
-    if (!$hadtokenfor || !in_array($itemid, $hadtokenfor)) {
+    if ($filearea == 'content' && (!$hadtokenfor || !in_array($itemid, $hadtokenfor))) {
         return false;
     }
 
@@ -1031,6 +740,7 @@ function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $force
     // Retrieve the file from the Files API.
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, 'mod_confman', $filearea, $itemid, $filepath, $filename);
+
     if (!$file) {
         return false; // The file does not exist.
     }
@@ -1038,4 +748,52 @@ function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $force
     // We can now send the file back to the browser - in this case with a cache lifetime of 1 day and no filtering.
     // From Moodle 2.3, use send_stored_file instead.
     send_stored_file($file, 86400, 0, $forcedownload, $options);
+}
+
+function confman_add_instance($event) {
+    global $DB, $COURSE;
+    $event->course = $COURSE->id;
+    $event->created = time();
+    $event->cmid = $event->coursemodule;
+
+    $event->id = $DB->insert_record('confman', $event, true);
+    if ($event->id > 0) {
+        // Now receive files.
+        $modcontext = context_module::instance($event->cmid);
+        $draftid = file_get_submitted_draft_itemid('introeditor');
+        if (!empty($draftid)) {
+            file_save_draft_area_files(
+                $draftid, $modcontext->id, 'mod_confman', 'introx', $event->id,
+                array('subdirs'=>true)
+            );
+        }
+    }
+
+    return $event->id;
+}
+function confman_update_instance($event) {
+    global $DB, $COURSE;
+    $event->id = $event->instance;
+    $event->course = $COURSE->id;
+    $event->cmid = $event->coursemodule;
+
+    // Now receive files.
+    $modcontext = context_module::instance($event->cmid);
+    $draftid = file_get_submitted_draft_itemid('introeditor');
+
+    $event->intro = file_save_draft_area_files(
+        $draftid, $modcontext->id, 'mod_confman', 'introx', $event->id,
+        array('subdirs'=>true), $event->intro
+    );
+    $DB->update_record('confman', $event);
+
+    return true;
+}
+function confman_delete_instance($id) {
+    global $DB;
+    $DB->delete_records('confman_comments', array('eventid' => $id));
+    $DB->delete_records('confman_items', array('event' => $id));
+    $DB->delete_records('confman', array('id' => $id));
+
+    return true;
 }

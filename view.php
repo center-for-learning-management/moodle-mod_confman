@@ -56,13 +56,24 @@ $act = optional_param("act", "", PARAM_TEXT);
 switch ($act) {
     case "listall":
         $items = $DB->get_records('confman_items', array('event' => $confman->id));
+        echo $OUTPUT->render_from_template('mod_confman/item_table_head', array());
         foreach($items AS $item) {
-            $it = new mod_confman_item($item->id);
-            $it->html();
+            $item = new mod_confman_item($item->id);
+            $item->prepare_output();
+            echo $OUTPUT->render_from_template('mod_confman/item_table_row', $item->data);
         }
+        echo $OUTPUT->render_from_template('mod_confman/item_table_foot', array());
     break;
     default:
         $confman->html();
+        $items = $DB->get_records('confman_items', array('event' => $confman->id));
+        echo $OUTPUT->render_from_template('mod_confman/item_table_head', $confman);
+        foreach($items AS $item) {
+            $item = new mod_confman_item($item->id);
+            $item->prepare_output();
+            echo $OUTPUT->render_from_template('mod_confman/item_table_row', $item->data);
+        }
+        echo $OUTPUT->render_from_template('mod_confman/item_table_foot', array());
 }
 
 echo $OUTPUT->footer();

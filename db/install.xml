@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/confman/db" VERSION="20170908" COMMENT="XMLDB file for Moodle mod/confman"
+<XMLDB PATH="mod/confman/db" VERSION="20190410" COMMENT="XMLDB file for Moodle mod/confman"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -7,16 +7,23 @@
     <TABLE NAME="confman" COMMENT="Table for Events of ConfMan">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="name" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="description" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="intro" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="submissionstart" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="submissionend" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="contents" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Additional contents packed as Array"/>
         <FIELD NAME="event_organizer" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="event_contact" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="targetgroups" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="types" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="mail_contributor_creation" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="mail_contributor_update" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="mail_contributor_files" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="mail_organizer_creation" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="mail_organizer_update" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="mail_organizer_files" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -52,6 +59,5 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-
   </TABLES>
 </XMLDB>

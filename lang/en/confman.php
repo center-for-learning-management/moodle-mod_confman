@@ -29,6 +29,10 @@ $string['capability:missing'] = 'Missing required Capability';
 $string['confman:addinstance'] = 'Add ConfMan';
 $string['confman:view'] = 'View ConfMan';
 
+$string['actions'] = 'Actions';
+$string['actions:approve'] = 'Approve';
+$string['actions:export'] = 'Export';
+
 $string['event:name'] = 'Title';
 $string['event:description'] = 'Description';
 $string['event:submissionstart'] = 'Start of Submission';
@@ -91,8 +95,10 @@ $string['item:you_can_modify'] = 'You can modify this data using the following l
 
 $string['item:check'] = 'Prove you are a human';
 
+$string['comment'] = 'Comment';
 $string['comments'] = 'Comments';
 $string['comment:add'] = 'Add comment';
+$string['comment:missing'] = 'Required comment';
 $string['comment:store'] = 'Save comment';
 $string['comment:stored:success'] = 'Comment saved successfully';
 $string['comment:stored:failed'] = 'Comment could not be saved';
@@ -108,6 +114,17 @@ $string['confman:manage'] = 'Manage ConfMan Entries';
 $string['confman:rate'] = 'Rate ConfMan Entries';
 
 $string['none'] = 'None';
+
+$string['mail:contributor'] = 'Notify contributor';
+$string['mail:contributor:notice'] = '<b>Attention:</b> If the contributor is not informed about the creation of his contribution he will not receive the link to manage his contribution. In most cases you should leave this on!';
+$string['mail:contributor:creation'] = 'contribution is created';
+$string['mail:contributor:files'] = 'files change';
+$string['mail:contributor:update'] = 'contribution is updated';
+
+$string['mail:organizer'] = 'Notify organizer';
+$string['mail:organizer:creation'] = 'contribution is created';
+$string['mail:organizer:files'] = 'files change';
+$string['mail:organizer:update'] = 'contribution is updated';
 
 $string['mail:subject:mail'] = 'Your submission was saved!';
 $string['mail:subject:comment'] = 'Comment added';

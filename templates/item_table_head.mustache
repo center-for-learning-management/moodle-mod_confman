@@ -1,0 +1,45 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+    This file receives an object of type mod_confman_event
+}}
+
+{{#js}}
+require(['mod_confman/main'], function(MAIN) {
+    MAIN.item_as_modal_prepare('{{uniqid}}');
+});
+{{/js}}
+
+<form action="export.php?event={{id}}" method="POST">
+    <a href="#" onclick="require(['mod_confman/main'], function(MAIN) { MAIN.selectAllNone('{{uniqid}}'); });">select all/none</a>
+    <a href="#" onclick="require(['mod_confman/main'], function(MAIN) { MAIN.selectApproved('{{uniqid}}'); });">select approved</a>
+
+<table width="100%" id="mod_confman_item_table" class="generaltable">
+    <colgroup>
+        <col style="width: 30px; text-align: center;" />
+        <col style="width: 100px; text-align: center;" />
+        <col />
+        <col style="width: 50%;" />
+    </colgroup>
+    <thead>
+        <tr>
+            <td class="export">{{#pix}} i/export, core {{/pix}}</td>
+            <td>{{#str}} actions, mod_confman {{/str}}</td>
+            <td>{{#str}} item:contributor, mod_confman {{/str}}</td>
+            <td width="50%">{{#str}} item:title, mod_confman {{/str}}</td>
+        </tr>
+    </thead>
+    <tbody id="{{uniqid}}-items">

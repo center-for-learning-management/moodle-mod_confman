@@ -33,64 +33,133 @@ require_once($CFG->libdir.'/adminlib.php');
  * All permission-checks are done in the constructor of mod_confman_item
  */
 
-require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/confman/lib.php');
 
 /*
  *  We just check if this parameter is given, it is needed in the constructor of mod_confman_event
  *  which is created by mod_confman_item.
  */
-required_param("event", PARAM_INT);
+$eventid = required_param("event", PARAM_INT);
+$event = new mod_confman_event($eventid);
+
 $itemid = optional_param("id", 0, PARAM_INT);
 $token = optional_param("token", "", PARAM_ALPHANUMEXT);
+$item = new mod_confman_item($itemid, $token, $eventid);
 
-$item = new mod_confman_item($itemid, $token);
+$preview = optional_param("preview", 0, PARAM_INT);
+$embedded = optional_param("embedded", 0, PARAM_INT);
+$noheader = optional_param("noheader", 0, PARAM_INT);
 
-?><DOCTYPE html>
-<html>
-     <head>
-          <title><?php echo get_string('pluginname', 'confman'); ?></title>
-          <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
-          <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-          <script src="<?php echo $CFG->wwwroot; ?>/mod/confman/script/js.js"></script>
-          <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
-          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/style/confman.min.css" />
-          <link rel="stylesheet" href="<?php echo $CFG->wwwroot; ?>/mod/confman/style/main.css" />
-     </head>
-     <body>
-<?php
+$PAGE->set_context(context_course::instance($event->course));
+if ($embedded) {
+    $PAGE->set_pagelayout('frametop');
+} else {
+    $PAGE->set_pagelayout('incourse'); //($USER->id == 0 || isguestuser($USER)) ? 'frametop' : 'incourse');
+}
+$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $id, 'token' => $token, 'preview' => $preview)));
+$PAGE->set_title($item->get_title());
+$PAGE->set_heading($item->get_title());
+
+//$PAGE->requires->js('/mod/confman/script/js.js');
+//$PAGE->requires->css('/mod/confman/style/main.css');
+//$PAGE->requires->css('/mod/confman/style/confman.min.css');
 
 // Now that we have created our item we check if we are allowed to access.
 if (!$item->can_edit && !$item->can_view) {
-    $OUTPUT->header();
-    echo "<p>Permission denied</p>";
-} else {
-?>
-          <div data-role="page" id="item">
-               <div data-role="header">
-                    <h1><?php echo $item->title; ?></h1>
-               </div>
-               <div role="main" class="ui-content">
-<?php
+    if (!$noheader) echo $OUTPUT->header();
+    echo $OUTPUT->render_from_template('mod_confman/alert', array(
+        'content' => 'Permission denied',
+        'type' => 'danger',
+        'url' => $CFG->wwwroot . '/my',
+    ));
+    if (!$noheader) echo $OUTPUT->footer();
+    die();
+}
 
+// The form will be specific to the event stored in $event.
+require_once($CFG->dirroot . '/mod/confman/classes/item_form.php');
+$itemform = new item_form(str_replace($CFG->wwwroot, '', $PAGE->url));
+if ($data = $itemform->get_data()) {
+    $item->store($data);
     if ($item->id > 0) {
-        if ($item->had_token) {
-            $item->form();
-        } else {
-            $item->html();
-        }
+        redirect($item->manage_link() . '&showsuccess=1');
+        echo $OUTPUT->header();
+        echo $OUTPUT->render_from_template('mod_confman/alert', array(
+            'content' => get_string('item:stored', 'confman').'<br />'.get_string('item:you_can_modify', 'confman').': <a href="'.$item->manage_link().'">'.$item->manage_link().'</a>',
+            'type' => 'success',
+            'url' => $item->manage_link(),
+        ));
+        echo $OUPUT->footer();
+        die();
     } else {
-        $item->form();
+        echo $OUTPUT->render_from_template('mod_confman/alert', array(
+            'content' => get_string('event:error', 'confman'),
+            'type' => 'danger',
+        ));
+    }
+}
+
+if (!$noheader) echo $OUTPUT->header();
+if (optional_param('showsuccess', 0, PARAM_INT) == 1) {
+    echo $OUTPUT->render_from_template('mod_confman/alert', array(
+        'content' => get_string('item:stored', 'confman').'<br />'.get_string('item:you_can_modify', 'confman').': <a href="'.$item->manage_link().'">'.$item->manage_link().'</a>',
+        'type' => 'success',
+        'url' => $item->manage_link(),
+    ));
+}
+
+$item->data->event = $eventid;
+$item->set_form_data($itemform);
+
+if ($item->id > 0) {
+    if (!$preview && ($item->can_manage || $item->can_edit && !$item->is_obsolete)) {
+        $itemform->display();
+    } else {
+        $item->prepare_output();
+        echo html_writer::table($item->get_table());
     }
 
-    $item->comments();
+    // COMMENTS
+    if (!$embedded) {
+        require_once($CFG->dirroot . '/mod/confman/classes/comment_form.php');
+        $commentform = new comment_form(str_replace($CFG->wwwroot, '', $PAGE->url));
+        if ($data = $commentform->get_data()) {
+            // Store the new comment.
+            $comment = array(
+                'comment' => $data->comment['text'],
+                'created' => time(),
+                'eventid' => $data->event,
+                'itemid' => $data->id,
+                'userid' => (!empty($USER->id) && !isguestuser($USER)) ? $USER->id : 0,
+            );
+            $comment['id'] = $DB->insert_record('confman_comments', $comment, true);
+            echo $OUTPUT->render_from_template('mod_confman/alert', array(
+                'content' => ($comment['id'] > 0) ? get_string('comment:stored:success', 'confman') : get_string('comment:stored:failed', 'confman'),
+                'type' => ($comment['id'] > 0) ? 'success' : 'danger',
+            ));
+        }
+        $commentform->set_data(array('id' => $item->id, 'event' => $event->id, 'token' => $token));
+        $commentform->display();
+    }
 
-?>
-               
-               </div>
-          </div>
-<?php
-} // Ends else if can_edit and can_view.
-?>
-     </body>
-</html>
+    $sql = "SELECT * FROM {confman_comments}
+              WHERE eventid=? AND itemid=?
+              ORDER BY created DESC";
+    $comments = $DB->get_records_sql($sql, array($item->event->id, $item->id));
+    foreach ($comments AS $comment) {
+        $comment->created_readable = date("l, j. F Y H:i:s", $comment->created);
+        if ($comment->userid > 0) {
+            $user = $DB->get_record("user", array("id" => $comment->userid));
+            $comment->user = "<a class=\"ui-li-aside\" href=\"".$CFG->wwwroot."/user/profile.php?id=".
+                $user->id."\" data-ajax=\"false\">".$user->firstname." ".$user->lastname."</a>";
+        } else {
+            $comment->user = "<span class=\"ui-li-aside\">".get_string("user:external", "confman")."</span>";
+        }
+        echo $OUTPUT->render_from_template('mod_confman/comment', $comment);
+    }
+} else {
+    // We show the form to enter a new item.
+    $itemform->display();
+}
+
+if (!$noheader) echo $OUTPUT->footer();
