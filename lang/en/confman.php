@@ -68,10 +68,10 @@ $string['item:event'] = 'Event';
 $string['item:title'] = 'Title';
 $string['item:organization'] = 'Organization';
 $string['item:contributor'] = 'Contributor';
-$string['item:title_pre'] = 'Title (before name)';
+$string['item:title_pre'] = 'Academic Title (before name)';
 $string['item:firstname'] = 'Firstname';
 $string['item:lastname'] = 'Lastname';
-$string['item:title_post'] = 'Title (after name)';
+$string['item:title_post'] = 'Academic Title (after name)';
 $string['item:email'] = 'e-Mail';
 $string['item:email2'] = 'e-Mail Confirmation';
 

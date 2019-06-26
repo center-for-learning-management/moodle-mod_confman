@@ -24,8 +24,11 @@ require(['mod_confman/main'], function(MAIN) {
 {{/js}}
 
 <form action="export.php?event={{id}}" method="POST">
-    <a href="#" onclick="require(['mod_confman/main'], function(MAIN) { MAIN.selectAllNone('{{uniqid}}'); });">select all/none</a>
-    <a href="#" onclick="require(['mod_confman/main'], function(MAIN) { MAIN.selectApproved('{{uniqid}}'); });">select approved</a>
+    <button type="submit" class="btn btn-secondary">
+        {{#pix}} i/export, core {{/pix}} {{#str}} actions:export, mod_confman {{/str}}
+    </button><br />
+    [<a href="#" onclick="require(['mod_confman/main'], function(MAIN) { MAIN.selectAllNone('{{uniqid}}'); });">select all/none</a>]
+    [<a href="#" onclick="require(['mod_confman/main'], function(MAIN) { MAIN.selectApproved('{{uniqid}}'); });">select approved</a>]
 
 <table width="100%" id="mod_confman_item_table" class="generaltable">
     <colgroup>

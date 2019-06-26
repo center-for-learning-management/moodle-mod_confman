@@ -56,7 +56,7 @@ function xmldb_confman_upgrade($oldversion) {
                 $dbman->add_field($table, $field);
             }
         }
-        $dbman->drop_field($table, new xmldb_field('contents'));
+        $dbman->drop_field($table, new xmldb_field('contents', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'description'));
         upgrade_mod_savepoint(true, 2019041000, 'confman');
     }
     if ($oldversion < 2019041001) {
@@ -69,12 +69,12 @@ function xmldb_confman_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-        $field = new xmldb_field('description');
+        $field = new xmldb_field('description', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'name');
         if ($dbman->field_exists($table, $field)) {
             $dbman->rename_field($table, $field, 'intro');
         }
 
-        $field = new xmldb_field('contents');
+        $field = new xmldb_field('contents', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'intro');
         if ($dbman->field_exists($table, $field)) {
             $dbman->drop_field($table, $field);
         }

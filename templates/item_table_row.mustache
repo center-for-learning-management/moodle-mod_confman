@@ -21,7 +21,14 @@
         <input type="checkbox" name="ids[]" value="{{id}}" />
     </td>
     <td>
-        {{#actions}}<a href="{{url}}" onclick="{{onclick}}" target="_blank" class="{{classname}}" alt="{{classname}}">{{#icon}}{{#pix}} {{{icon}}} {{/pix}}{{/icon}}{{^icon}}{{label}} {{/icon}}</a>{{/actions}}
+        {{#actions}}<a href="{{url}}" onclick="{{onclick}}" target="_blank" class="{{classname}}" alt="{{classname}}">
+            {{#icon}}
+                <img src="{{icon}}" alt="{{label}}" />
+            {{/icon}}
+            {{^icon}}
+                {{label}}
+            {{/icon}}
+        </a>{{/actions}}
     </td>
     <td class="contributor">{{contributor}}</td>
     <td class="title">{{title}}</td>

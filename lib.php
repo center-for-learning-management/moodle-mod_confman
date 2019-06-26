@@ -542,7 +542,7 @@ class mod_confman_item {
      * Prepares some data before it can be printed from mustache.
      */
     public function prepare_output() {
-        global $CFG;
+        global $CFG, $OUTPUT;
         $this->data->eventname = $this->event->name;
         $this->data->contributor = $this->data->title_pre;
         if (!empty($this->data->contributor)) $this->data->contributor .= ' ';
@@ -554,7 +554,7 @@ class mod_confman_item {
         if ($this->can_view) {
             $this->data->actions[] = array(
                 'classname' => 'preview',
-                'icon' => 't/preview',
+                'icon' => $CFG->wwwroot . '/pix/t/preview.svg',
                 'label' => 'view',
                 'url' => $CFG->wwwroot . '/mod/confman/index.php?event=' . $this->event->id . '&id=' . $this->id . '&preview=1',
             );
@@ -562,7 +562,7 @@ class mod_confman_item {
         if ($this->can_edit) {
             $this->data->actions[] = array(
                 'classname' => 'edit',
-                'icon' => 'i/settings',
+                'icon' => $CFG->wwwroot . '/pix/i/settings.svg',
                 'label' => 'edit',
                 'url' => $this->manage_link(),
             );
@@ -571,7 +571,7 @@ class mod_confman_item {
             $icon = (!empty($this->data->approved) && $this->data->approved > 0) ? 'completion-auto-pass' : 'completion-auto-n';
             $this->data->actions[] = array(
                 'classname' => 'approve',
-                'icon' => 'i/' . $icon,
+                'icon' => $CFG->wwwroot . '/pix/i/' . $icon . '.svg',
                 'label' => get_string('approve', 'confman'),
                 'onclick' => 'var a = this; require(["mod_confman/main"], function(MAIN) { MAIN.set_approved("' . $CFG->wwwroot . '", ' . $this->id . ', "' . $this->token . '", a); }); return false;',
                 'url' => '#',
