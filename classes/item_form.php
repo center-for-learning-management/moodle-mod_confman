@@ -24,6 +24,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->libdir . "/formslib.php");
+require_once($CFG->dirroot . "/mod/confman/lib.php");
 
 class item_form extends moodleform {
     static $accepted_types = '';
@@ -54,6 +55,10 @@ class item_form extends moodleform {
         $mform->setType('created', PARAM_INT);
         $mform->addElement('hidden', 'modified', 0);
         $mform->setType('modified', PARAM_INT);
+
+        $_event = new mod_confman_event($event->id);
+        $mform->addElement('header', 'eventname', $event->name);
+        $mform->addElement('html', $event->html('_public'));
 
         $mform->addElement('header', 'personaldata', get_string('item:section:personaldata', 'confman'));
         $mform->addElement('text', 'title_pre', get_string('item:title_pre', 'confman'));
@@ -105,7 +110,7 @@ class item_form extends moodleform {
         $boxes = array();
         $cnt = 0;
         foreach($event->targetgroups AS $target) {
-            $boxes[] = $mform->createElement('checkbox', 'targetgroup_' . $cnt, $target["targetgroup"] . ' (<i>' . $target["description"] . '</i>)', null, array('value' => $target["targetgroup"]));
+            $boxes[] = $mform->createElement('checkbox', 'targetgroup_' . $cnt, $target["targetgroup"] . (!empty($target["description"]) ? ' (<i>' . $target["description"] . '</i>)' : ''), null, array('value' => $target["targetgroup"]));
             $mform->setType('targetgroup_' . $cnt, PARAM_BOOL);
             if (isset($item) && in_array($target["targetgroup"], $item->data->targetgroups)) {
                 $mform->setDefault('targetgroup_' . $cnt, 1);

@@ -79,13 +79,17 @@ class mod_confman_event {
         }
         return "";
     }
-    public function html() {
+    /**
+     * Renders the HTML-Output for an event.
+     * @param subtype Render a subtype of this template, e.g. '_public'
+     */
+    public function html($subtype='') {
         global $CFG, $OUTPUT;
         $this->_submissionstart = date("Y-m-d H:i", $this->submissionstart);
         $this->_submissionend = date("Y-m-d H:i", $this->submissionend);
         $this->submissionlink = $CFG->wwwroot . "/mod/confman/index.php?embedded=1&event=".$this->id;
 
-        echo $OUTPUT->render_from_template('mod_confman/event', $this);
+        return $OUTPUT->render_from_template('mod_confman/event' . $subtype, $this);
     }
     public function list_items() {
         global $DB, $CFG;

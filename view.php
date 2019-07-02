@@ -65,7 +65,7 @@ switch ($act) {
         echo $OUTPUT->render_from_template('mod_confman/item_table_foot', array());
     break;
     default:
-        $confman->html();
+        echo $confman->html();
         $items = $DB->get_records('confman_items', array('event' => $confman->id));
         echo $OUTPUT->render_from_template('mod_confman/item_table_head', $confman);
         foreach($items AS $item) {
