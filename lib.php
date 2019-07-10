@@ -134,7 +134,7 @@ class mod_confman_item {
      */
     public function __construct($id = 0, $token="", $eventid = 0) {
         global $CFG, $DB, $event;
-        $eventid = $eventid || $event->id;
+        if (empty($eventid) && !empty($event->id)) $eventid = $event->id;
         $this->debug = optional_param("debug", 0, PARAM_INT);
         $this->itemcheck = cache::make('mod_confman', 'itemcheck');
         $this->hadtokenfor = cache::make('mod_confman', 'hadtokenfor');
@@ -559,7 +559,7 @@ class mod_confman_item {
             $this->data->actions[] = array(
                 'classname' => 'preview',
                 'icon' => $CFG->wwwroot . '/pix/t/preview.svg',
-                'label' => 'view',
+                'label' => get_string('view', 'core'),
                 'url' => $CFG->wwwroot . '/mod/confman/index.php?event=' . $this->event->id . '&id=' . $this->id . '&preview=1',
             );
         }
@@ -567,7 +567,7 @@ class mod_confman_item {
             $this->data->actions[] = array(
                 'classname' => 'edit',
                 'icon' => $CFG->wwwroot . '/pix/i/settings.svg',
-                'label' => 'edit',
+                'label' => get_string('edit', 'core'),
                 'url' => $this->manage_link(),
             );
         }
@@ -576,7 +576,7 @@ class mod_confman_item {
             $this->data->actions[] = array(
                 'classname' => 'approve',
                 'icon' => $CFG->wwwroot . '/pix/i/' . $icon . '.svg',
-                'label' => get_string('approve', 'confman'),
+                'label' => get_string('actions:approve', 'confman'),
                 'onclick' => 'var a = this; require(["mod_confman/main"], function(MAIN) { MAIN.set_approved("' . $CFG->wwwroot . '", ' . $this->id . ', "' . $this->token . '", a); }); return false;',
                 'url' => '#',
             );
