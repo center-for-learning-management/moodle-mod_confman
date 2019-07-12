@@ -30,8 +30,15 @@ require_once($CFG->dirroot.'/mod/confman/lib.php');
 class mod_confman_mod_form extends moodleform_mod {
     public function definition() {
         global $CFG, $COURSE, $DB, $OUTPUT, $USER;
+        global $embedded, $eventid, $id, $token, $preview;
 
         $mform =& $this->_form;
+
+        $mform->addElement('embedded', 'hidden', $embedded);
+        $mform->addElement('eventid', 'hidden', $eventid);
+        $mform->addElement('id', 'hidden', $id);
+        $mform->addElement('token', 'hidden', $token);
+        $mform->addElement('preview', 'hidden', $preview);
 
         $mform->addElement('text', 'name', get_string('event:name', 'confman'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);

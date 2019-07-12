@@ -56,7 +56,7 @@ if ($embedded) {
 } else {
     $PAGE->set_pagelayout('incourse'); //($USER->id == 0 || isguestuser($USER)) ? 'frametop' : 'incourse');
 }
-$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $id, 'token' => $token, 'preview' => $preview)));
+$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $id, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded)));
 $PAGE->set_title($item->get_title());
 $PAGE->set_heading($item->get_title());
 
@@ -78,7 +78,7 @@ if (!$item->can_edit && !$item->can_view) {
 
 // The form will be specific to the event stored in $event.
 require_once($CFG->dirroot . '/mod/confman/classes/item_form.php');
-$itemform = new item_form(str_replace($CFG->wwwroot, '', $PAGE->url));
+$itemform = new item_form();
 if ($data = $itemform->get_data()) {
     $item->store($data);
     if ($item->id > 0) {

@@ -22,7 +22,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version  = 2019062400;   // The (date) version of this module + 2 extra digital for daily versions
+$plugin->version  = 2019071200;   // The (date) version of this module + 2 extra digital for daily versions
                                   // This version number is displayed into /admin/forms.php
                                   // TODO: if ever this plugin get branched, the old branch number
                                   // will not be updated to the current date but just incremented. We will
@@ -30,5 +30,5 @@ $plugin->version  = 2019062400;   // The (date) version of this module + 2 extra
                                   // display this version number with userdate (dev friendly)
 $plugin->requires = 2014051200;  // Requires Moodle 2.7.
 $plugin->component = 'mod_confman';
-$plugin->release = '2.0 (Build: 2019062400)';
+$plugin->release = '2.0 (Build: 2019071200)';
 $plugin->maturity = MATURITY_STABLE;
