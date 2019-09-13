@@ -34,11 +34,11 @@ class mod_confman_mod_form extends moodleform_mod {
 
         $mform =& $this->_form;
 
-        $mform->addElement('embedded', 'hidden', $embedded);
-        $mform->addElement('eventid', 'hidden', $eventid);
-        $mform->addElement('id', 'hidden', $id);
-        $mform->addElement('token', 'hidden', $token);
-        $mform->addElement('preview', 'hidden', $preview);
+        $mform->addElement('hidden', 'embedded', $embedded);
+        $mform->addElement('hidden', 'eventid', $eventid);
+        $mform->addElement('hidden', 'id', $id);
+        $mform->addElement('hidden', 'token', $token);
+        $mform->addElement('hidden', 'preview', $preview);
 
         $mform->addElement('text', 'name', get_string('event:name', 'confman'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);

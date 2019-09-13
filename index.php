@@ -22,7 +22,7 @@
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
-
+sesskey();
 /*
  * This page can be accessed by users that are not logged in
  * Permission to modifiy an item or manage files depends
@@ -56,7 +56,7 @@ if ($embedded) {
 } else {
     $PAGE->set_pagelayout('incourse'); //($USER->id == 0 || isguestuser($USER)) ? 'frametop' : 'incourse');
 }
-$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $id, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded)));
+$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $itemid, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded)));
 $PAGE->set_title($item->get_title());
 $PAGE->set_heading($item->get_title());
 

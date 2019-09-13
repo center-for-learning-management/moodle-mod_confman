@@ -256,13 +256,13 @@ class mod_confman_item {
     public function get_title() {
         $title = 'n/a';
         if ($this->can_view && !empty($this->data->title)) {
-            $title = $this->event->name.": ".$this->data->title;
+            $title = $this->event->name . ": " . $this->data->title;
         } else if ($this->id == 0) {
             $title = $this->event->name;
         } else {
             $title = get_string('pluginname', 'confman');
         }
-        return $this->data->title;
+        return $title;
     }
 
     /**
@@ -430,30 +430,33 @@ class mod_confman_item {
         if (count($files) == 0) {
             $files[] = "<li>".get_string("none", "confman")."</li>";
         }
-        $dbcomments = $DB->get_records_sql(
-            'SELECT * FROM {confman_comments} WHERE eventid=? AND itemid=? ORDER BY created DESC',
-            array($this->eventid, $this->id)
-        );
         $comments = array();
-        if (count($dbcomments) > 0) {
-            $comments[] = "<h2>".get_string('comments', 'confman')."</h2>";
-            $comments[] = "<ul data-role=\"listview\" data-inset=\"true\">\n";
-        }
-        foreach ($dbcomments as $comment) {
-            $comment->created_readable = date("l, j. F Y H:i:s", $comment->created);
-            if ($comment->userid > 0) {
-                $user = $DB->get_record("user", array("id" => $comment->userid));
-                $comment->user = "<a class=\"ui-li-aside\" href=\"".$CFG->wwwroot."/user/profile.php?id=".
-                    $user->id."\" data-ajax=\"false\">".$user->firstname." ".$user->lastname."</a>";
-            } else {
-                $comment->user = "<span class=\"ui-li-aside\">".get_string("user:external", "confman")."</span>";
+        if (!empty($this->eventid) && !empty($this->id)) {
+            $dbcomments = $DB->get_records_sql(
+                'SELECT * FROM {confman_comments} WHERE eventid=? AND itemid=? ORDER BY created DESC',
+                array($this->eventid, $this->id)
+            );
+            if (count($dbcomments) > 0) {
+                $comments[] = "<h2>".get_string('comments', 'confman')."</h2>";
+                $comments[] = "<ul data-role=\"listview\" data-inset=\"true\">\n";
             }
-            $comments[] = "<li data-role=\"list-divider\">".$comment->created_readable."</li>";
-            $comments[] = "<li><p>".$comment->comment.$comment->user."</p></li>";
+            foreach ($dbcomments as $comment) {
+                $comment->created_readable = date("l, j. F Y H:i:s", $comment->created);
+                if ($comment->userid > 0) {
+                    $user = $DB->get_record("user", array("id" => $comment->userid));
+                    $comment->user = "<a class=\"ui-li-aside\" href=\"".$CFG->wwwroot."/user/profile.php?id=".
+                        $user->id."\" data-ajax=\"false\">".$user->firstname." ".$user->lastname."</a>";
+                } else {
+                    $comment->user = "<span class=\"ui-li-aside\">".get_string("user:external", "confman")."</span>";
+                }
+                $comments[] = "<li data-role=\"list-divider\">".$comment->created_readable."</li>";
+                $comments[] = "<li><p>".$comment->comment.$comment->user."</p></li>";
+            }
+            if (count($dbcomments) > 0) {
+                $comments[] = "</ul>\n";
+            }
         }
-        if (count($dbcomments) > 0) {
-            $comments[] = "</ul>\n";
-        }
+
         // Use $type instead of 'mail' to make various templates.
         $messagehtml = file_get_contents($CFG->dirroot."/mod/confman/templates/mail.html");
 
