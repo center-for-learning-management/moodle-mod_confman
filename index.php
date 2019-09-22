@@ -35,6 +35,12 @@ sesskey();
 
 require_once($CFG->dirroot . '/mod/confman/lib.php');
 
+// If the user is not logged in we try to login as guest.
+if (!isloggedin()) {
+    $guestuser = guest_user();
+    complete_user_login($guestuser);
+}
+
 /*
  *  We just check if this parameter is given, it is needed in the constructor of mod_confman_event
  *  which is created by mod_confman_item.
@@ -56,7 +62,7 @@ if ($embedded) {
 } else {
     $PAGE->set_pagelayout('incourse'); //($USER->id == 0 || isguestuser($USER)) ? 'frametop' : 'incourse');
 }
-$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $itemid, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded)));
+$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $itemid, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded, 'ts' => time()))); // the timestamp is used as atto would behave weird.
 $PAGE->set_title($item->get_title());
 $PAGE->set_heading($item->get_title());
 
