@@ -40,7 +40,6 @@ class mod_confman_event {
             $this->context = context_course::instance($this->course);
         }
 
-
         $this->can_manage = (has_capability('mod/confman:manage', $this->context));
 
         $targetgroups = explode("\n", $confman->targetgroups);
@@ -60,8 +59,10 @@ class mod_confman_event {
 
         $this->logo = $this->logo_url();
 
+        $this->is_obsolete = (time() > $this->submissionend);
         $this->submissionstart_readable = date("Y-m-d, H:i:s", $this->submissionstart);
         $this->submissionend_readable = date("Y-m-d, H:i:s", $this->submissionend);
+
         $this->cmid = 0;
     }
     public function logo_url() {

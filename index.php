@@ -118,7 +118,7 @@ $item->data->event = $eventid;
 $item->set_form_data($itemform);
 
 if ($item->id > 0) {
-    if (!$preview && ($item->can_manage || $item->can_edit && !$item->is_obsolete)) {
+    if (!$preview && ($item->can_manage || ($item->can_edit && !$item->is_obsolete))) {
         $itemform->display();
     } else {
         $item->prepare_output();
@@ -165,7 +165,14 @@ if ($item->id > 0) {
     }
 } else {
     // We show the form to enter a new item.
-    $itemform->display();
+    if (!$event->is_obsolete) {
+        $itemform->display();
+    } else {
+        echo $OUTPUT->render_from_template('mod_confman/alert', array(
+            'content' => get_string('item:obsolete', 'confman'),
+            'type' => 'warning',
+        ));
+    }
 }
 
 if (!$noheader) echo $OUTPUT->footer();
