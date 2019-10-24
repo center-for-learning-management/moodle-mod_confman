@@ -317,7 +317,6 @@ class mod_confman_item {
         );
 
         if (!$file) return true;
-
         if ($file) {
             return $file->delete();
         }
@@ -432,10 +431,10 @@ class mod_confman_item {
             $files[] = "<li>".get_string("none", "confman")."</li>";
         }
         $comments = array();
-        if (!empty($this->eventid) && !empty($this->id)) {
+        if (!empty($this->event->id) && !empty($this->id)) {
             $dbcomments = $DB->get_records_sql(
                 'SELECT * FROM {confman_comments} WHERE eventid=? AND itemid=? ORDER BY created DESC',
-                array($this->eventid, $this->id)
+                array($this->event->id, $this->id)
             );
             if (count($dbcomments) > 0) {
                 $comments[] = "<h2>".get_string('comments', 'confman')."</h2>";
@@ -450,8 +449,7 @@ class mod_confman_item {
                 } else {
                     $comment->user = "<span class=\"ui-li-aside\">".get_string("user:external", "confman")."</span>";
                 }
-                $comments[] = "<li data-role=\"list-divider\">".$comment->created_readable."</li>";
-                $comments[] = "<li><p>".$comment->comment.$comment->user."</p></li>";
+                $comments[] = "<li data-role=\"list-divider\"><p>".$comment->created_readable.", ".$comment->user."</p><div>".$comment->comment."</div></li>";
             }
             if (count($dbcomments) > 0) {
                 $comments[] = "</ul>\n";
@@ -604,7 +602,7 @@ class mod_confman_item {
         $dataform->set_data($data);
     }
 
-
+/*
     public function comments() {
         global $DB, $CFG;
         // Either we are allowed to manage, rate, or we knew the token!
@@ -707,7 +705,7 @@ class mod_confman_item {
         $this->comment_stored = $DB->insert_record('confman_comments', $comment, true);
         $this->mail("comment");
     }
-
+*/
     public static function asutf8($str) {
         if (preg_match('!!u', $str)) {
             return $str;

@@ -143,6 +143,7 @@ if ($item->id > 0) {
                 'content' => ($comment['id'] > 0) ? get_string('comment:stored:success', 'confman') : get_string('comment:stored:failed', 'confman'),
                 'type' => ($comment['id'] > 0) ? 'success' : 'danger',
             ));
+            $item->mail("mail", "update");
         }
         $commentform->set_data(array('id' => $item->id, 'event' => $event->id, 'token' => $token));
         $commentform->display();
