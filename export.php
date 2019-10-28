@@ -22,33 +22,52 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/confman/lib.php');
 
-require_once($CFG->dirroot . '/mod/confman/thirdparty/Spout/Autoloader/autoload.php');
+$format = optional_param('format', 'xlsx', PARAM_TEXT);
 
 $event = required_param('event', PARAM_INT);
-
 $event = new mod_confman_event($event);
 require_login($event->course);
-
+$PAGE->set_url(new moodle_url('/mod/confman/export.php', array('event' => $event->id)));
 $PAGE->set_context(context_course::instance($event->course));
+$PAGE->set_pagelayout('popup');
 if ($event->can_manage) {
-    $writer = \Box\Spout\Writer\WriterFactory::create(\Box\Spout\Common\Type::XLSX); // for XLSX files
-    //$writer->setShouldUseInlineStrings(true); // default (and recommended) value
-    //$writer->setShouldUseInlineStrings(false); // will use shared strings
-    $writer->openToBrowser($event->name . '.xlsx');
-
+    $lines = array();
+    $items = array();
     $fields = array('id', 'approved', 'title_pre', 'firstname', 'lastname', 'title_post', 'organization', 'email', 'title', 'targetgroups', 'types', 'description', 'memo');
-    $writer->addRow($fields);
 
     $ids = optional_param_array('ids', null, PARAM_INT);
-    foreach ($ids AS $id) {
+    foreach ($ids AS $z => $id) {
         $item = new mod_confman_item($id);
-        $fields = array(
+        $items[$z] = $item->data;
+        $lines[$z] = array(
             $item->id, $item->data->approved, $item->data->title_pre, $item->data->firstname,
             $item->data->lastname, $item->data->title_post, $item->data->organization,
             $item->data->email, $item->data->title, implode(', ', $item->data->targetgroups),
             implode(', ', $item->data->types), $item->data->description, $item->data->memo);
-        $writer->addRow($fields);
     }
 
-    $writer->close();
+    switch ($format) {
+        case 'xlsx':
+            require_once($CFG->dirroot . '/mod/confman/thirdparty/Spout/Autoloader/autoload.php');
+            $writer = \Box\Spout\Writer\WriterFactory::create(\Box\Spout\Common\Type::XLSX); // for XLSX files
+            //$writer->setShouldUseInlineStrings(true); // default (and recommended) value
+            //$writer->setShouldUseInlineStrings(false); // will use shared strings
+            $writer->openToBrowser($event->name . '.xlsx');
+            $writer->addRow($fields);
+            foreach ($lines AS $line) {
+                $writer->addRow($line);
+            }
+            $writer->close();
+        break;
+        case 'html':
+            echo $OUTPUT->header();
+            echo $OUTPUT->render_from_template('mod_confman/export_html', array('eventtitle' => $event->name, 'items' => $items));
+            echo $OUTPUT->footer();
+        break;
+        default:
+        echo $OUTPUT->header();
+        echo "UNKNOWN FORMAT";
+        echo $OUTPUT->footer();
+    }
+
 }

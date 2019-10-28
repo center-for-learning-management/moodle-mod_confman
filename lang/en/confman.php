@@ -32,6 +32,7 @@ $string['confman:view'] = 'View ConfMan';
 $string['actions'] = 'Actions';
 $string['actions:approve'] = 'Approve';
 $string['actions:export'] = 'Export';
+$string['actions:export_html'] = 'Export HTML';
 
 $string['event:name'] = 'Title';
 $string['event:description'] = 'Description';

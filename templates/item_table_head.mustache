@@ -24,6 +24,9 @@ require(['mod_confman/main'], function(MAIN) {
 {{/js}}
 
 <form action="export.php?event={{id}}" method="POST">
+    <button type="submit" name="format" value="html" class="btn btn-secondary">
+        {{#pix}} i/export, core {{/pix}} {{#str}} actions:export_html, mod_confman {{/str}}
+    </button> 
     <button type="submit" class="btn btn-secondary">
         {{#pix}} i/export, core {{/pix}} {{#str}} actions:export, mod_confman {{/str}}
     </button><br />
