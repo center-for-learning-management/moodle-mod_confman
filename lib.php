@@ -803,3 +803,35 @@ function confman_delete_instance($id) {
 
     return true;
 }
+
+/**
+ * Indicates API features that the forum supports.
+ *
+ * @uses FEATURE_GROUPS
+ * @uses FEATURE_GROUPINGS
+ * @uses FEATURE_MOD_INTRO
+ * @uses FEATURE_COMPLETION_TRACKS_VIEWS
+ * @uses FEATURE_COMPLETION_HAS_RULES
+ * @uses FEATURE_GRADE_HAS_GRADE
+ * @uses FEATURE_GRADE_OUTCOMES
+ * @param string $feature
+ * @return mixed True if yes (some features may use other values)
+ */
+function confman_supports($feature) {
+    switch($feature) {
+        case FEATURE_GROUPS:                  return false;
+        case FEATURE_GROUPINGS:               return false;
+        case FEATURE_MOD_INTRO:               return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS: return false;
+        case FEATURE_COMPLETION_HAS_RULES:    return false;
+        case FEATURE_GRADE_HAS_GRADE:         return false;
+        case FEATURE_GRADE_OUTCOMES:          return false;
+        case FEATURE_RATE:                    return false;
+        case FEATURE_BACKUP_MOODLE2:          return false;
+        case FEATURE_SHOW_DESCRIPTION:        return false;
+        case FEATURE_PLAGIARISM:              return false;
+        case FEATURE_ADVANCED_GRADING:        return false;
+
+        default: return null;
+    }
+}
