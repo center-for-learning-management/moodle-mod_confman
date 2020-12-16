@@ -29,7 +29,4 @@ $definitions = array(
     'hadtokenfor' => array(
         'mode' => cache_store::MODE_APPLICATION
     ),
-    'stored' => array(
-        'mode' => cache_store::MODE_APPLICATION
-    ),
 );
