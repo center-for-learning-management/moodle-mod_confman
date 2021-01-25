@@ -24,9 +24,9 @@ defined('MOODLE_INTERNAL') || die;
 
 $definitions = array(
     'itemcheck' => array(
-        'mode' => cache_store::MODE_APPLICATION
+        'mode' => cache_store::MODE_SESSION
     ),
     'hadtokenfor' => array(
-        'mode' => cache_store::MODE_APPLICATION
+        'mode' => cache_store::MODE_SESSION
     ),
 );
