@@ -137,9 +137,12 @@ class item_form extends moodleform {
                 $calc = $itemcheck->get('itemcheck');
                 if (empty($calc)) {
                     $calcs = array("+" , "-");
-                    $z1 = rand(10, 20);
-                    $z2 = rand(1, 10);
-                    $calc = rand(0, count($calcs) - 1);
+                    $z1 = 0; $z2 = 0; $calc = "+";
+                    while (empty(eval("return $z1$calc$z2"))) {
+                        $z1 = rand(10, 20);
+                        $z2 = rand(1, 10);
+                        $calc = rand(0, count($calcs) - 1);
+                    }
                     $calc = $z1 . " " . $calcs[$calc] . " " . $z2;
                     $itemcheck->set('itemcheck', $calc);
                 }
