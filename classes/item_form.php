@@ -138,7 +138,7 @@ class item_form extends moodleform {
                 if (empty($calc)) {
                     $calcs = array("+" , "-");
                     $z1 = 0; $z2 = 0; $calc = "+";
-                    while (empty(eval("return $z1$calc$z2"))) {
+                    while (empty(eval("return $z1$calc$z2;"))) {
                         $z1 = rand(10, 20);
                         $z2 = rand(1, 10);
                         $calc = rand(0, count($calcs) - 1);
