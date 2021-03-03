@@ -43,21 +43,28 @@ if ($event->can_manage) {
             $item->id, $item->data->approved, $item->data->title_pre, $item->data->firstname,
             $item->data->lastname, $item->data->title_post, $item->data->organization,
             $item->data->email, $item->data->title, implode(', ', $item->data->targetgroups),
-            implode(', ', $item->data->types), $item->data->description, $item->data->memo);
+            implode(', ', $item->data->types), strip_tags($item->data->description),
+            strip_tags($item->data->memo));
     }
 
     switch ($format) {
         case 'xlsx':
-            require_once($CFG->dirroot . '/mod/confman/thirdparty/Spout/Autoloader/autoload.php');
-            $writer = \Box\Spout\Writer\WriterFactory::create(\Box\Spout\Common\Type::XLSX); // for XLSX files
-            //$writer->setShouldUseInlineStrings(true); // default (and recommended) value
-            //$writer->setShouldUseInlineStrings(false); // will use shared strings
-            $writer->openToBrowser($event->name . '.xlsx');
-            $writer->addRow($fields);
-            foreach ($lines AS $line) {
-                $writer->addRow($line);
+            // Do some transformations for use of core\dataformat.
+            $columns = array();
+            foreach ($fields as $field) {
+                $columns[$field] = $field;
             }
-            $writer->close();
+            for ($i = 0; $i < count($lines); $i++) {
+                $line = array();
+                for ($z = 0; $z < count($fields); $z++) {
+                    $line[$fields[$z]] = $lines[$i][$z];
+                }
+                $lines[$i] = $line;
+            }
+            // Make an iterator from our array.
+            $o = new ArrayObject($lines);
+            $it = $o->getIterator();
+            \core\dataformat::download_data($event->name, 'excel', $columns, $it);
         break;
         case 'html':
             echo $OUTPUT->header();
