@@ -22,8 +22,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version  = 2021030300;
+$plugin->version  = 2021062200;
 $plugin->requires = 2019052000;
 $plugin->component = 'mod_confman';
-$plugin->release = '2.3 (Build: 2021030300)';
+$plugin->release = '2.3 (Build: 2021062200)';
 $plugin->maturity = MATURITY_STABLE;
