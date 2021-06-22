@@ -23,7 +23,7 @@ jobs:
   release-at-moodle-org:
     runs-on: ubuntu-latest
     env:
-      PLUGIN: filter_h5p
+      PLUGIN: mod_confman
       CURL: curl -s
       ENDPOINT_TOKEN: https://moodle.org/login/token.php
       ENDPOINT_REST: https://moodle.org/webservice/rest/server.php
