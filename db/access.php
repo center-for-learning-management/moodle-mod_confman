@@ -22,42 +22,42 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$capabilities = array(
-    'mod/confman:addinstance' => array(
+$capabilities = [
+    'mod/confman:addinstance' => [
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
+        'archetypes' => [
         'editingteacher' => CAP_ALLOW,
-        'manager' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'moodle/course:manageactivities'
-    ),
-    'mod/confman:view' => array(
+        'manager' => CAP_ALLOW,
+        ],
+        'clonepermissionsfrom' => 'moodle/course:manageactivities',
+    ],
+    'mod/confman:view' => [
     'captype' => 'read',
     'contextlevel' => CONTEXT_MODULE,
-    'archetypes' => array(
+    'archetypes' => [
         'guest' => CAP_ALLOW,
         'student' => CAP_ALLOW,
         'teacher' => CAP_ALLOW,
         'editingteacher' => CAP_ALLOW,
-        'manager' => CAP_ALLOW
-        )
-    ),
-    'mod/confman:manage' => array(
+        'manager' => CAP_ALLOW,
+        ],
+    ],
+    'mod/confman:manage' => [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-        'editingteacher' => CAP_ALLOW
-        ),
-    ),
-    'mod/confman:rate' => array(
+        'archetypes' => [
+        'editingteacher' => CAP_ALLOW,
+        ],
+    ],
+    'mod/confman:rate' => [
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => array(
-        'student' => CAP_ALLOW
-        ),
-    ),
-);
+        'archetypes' => [
+        'student' => CAP_ALLOW,
+        ],
+    ],
+];

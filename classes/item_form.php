@@ -29,7 +29,7 @@ require_once($CFG->dirroot . "/mod/confman/lib.php");
 class item_form extends moodleform {
     static $accepted_types = '';
     static $areamaxbytes = 10485760;
-    static $maxbytes = 1024*1024;
+    static $maxbytes = 1024 * 1024;
     static $maxfiles = 1;
     static $subdirs = 0;
 
@@ -38,9 +38,9 @@ class item_form extends moodleform {
         // Item gets customized to particular event / item.
         global $event, $item;
 
-        $editoroptions = array('subdirs'=>0, 'maxbytes'=>0, 'maxfiles'=>0,
-                               'changeformat'=>0, 'context'=>null, 'noclean'=>0,
-                               'trusttext'=>0, 'enable_filemanagement' => false);
+        $editoroptions = ['subdirs' => 0, 'maxbytes' => 0, 'maxfiles' => 0,
+                               'changeformat' => 0, 'context' => null, 'noclean' => 0,
+                               'trusttext' => 0, 'enable_filemanagement' => false];
 
         $mform = $this->_form;
         $mform->addElement('hidden', 'id', 0);
@@ -65,41 +65,41 @@ class item_form extends moodleform {
         $mform->setType('title_pre', PARAM_TEXT);
         $mform->addElement('text', 'firstname', get_string('item:firstname', 'confman'));
         $mform->setType('firstname', PARAM_TEXT);
-        $mform->addRule('firstname', NULL, 'required');
+        $mform->addRule('firstname', null, 'required');
         $mform->addElement('text', 'lastname', get_string('item:lastname', 'confman'));
         $mform->setType('lastname', PARAM_TEXT);
-        $mform->addRule('lastname', NULL, 'required');
+        $mform->addRule('lastname', null, 'required');
         $mform->addElement('text', 'title_post', get_string('item:title_post', 'confman'));
         $mform->setType('title_post', PARAM_TEXT);
         $mform->addElement('text', 'organization', get_string('item:organization', 'confman'));
         $mform->setType('organization', PARAM_TEXT);
-        $mform->addRule('organization', NULL, 'required');
+        $mform->addRule('organization', null, 'required');
 
         if (empty($item->id) || $item->can_manage) {
             $mform->addElement('text', 'email', get_string('item:email', 'confman'));
             $mform->setType('email', PARAM_TEXT);
-            $mform->addRule('email', NULL, 'email', null, 'server');
-            $mform->addRule('email', NULL, 'required');
+            $mform->addRule('email', null, 'email', null, 'server');
+            $mform->addRule('email', null, 'required');
 
             if (empty($item->id)) {
                 $mform->addElement('text', 'email2', get_string('item:email2', 'confman'));
                 $mform->setType('email2', PARAM_TEXT);
-                $mform->addRule('email2', NULL, 'required');
-                $mform->addRule(array('email2', 'email'), get_string('item:invalidvalue', 'confman'), 'compare', 'eq', 'server');
+                $mform->addRule('email2', null, 'required');
+                $mform->addRule(['email2', 'email'], get_string('item:invalidvalue', 'confman'), 'compare', 'eq', 'server');
             }
         } else {
-            $mform->addElement('html', $OUTPUT->render_from_template('mod_confman/form_row', array('label' => get_string('item:email', 'confman'), 'content' => $item->data->email)));
+            $mform->addElement('html', $OUTPUT->render_from_template('mod_confman/form_row', ['label' => get_string('item:email', 'confman'), 'content' => $item->data->email]));
         }
 
         $mform->addElement('header', 'yoursubmission', get_string('item:section:yoursubmission', 'confman'));
         $mform->addElement('text', 'title', get_string('item:title', 'confman'));
         $mform->setType('title', PARAM_TEXT);
-        $mform->addRule('title', NULL, 'required');
+        $mform->addRule('title', null, 'required');
 
         $cnt = 0;
-        $boxes = array();
-        foreach($event->types AS $type) {
-            $boxes[] = $mform->createElement('checkbox', 'type_' . $cnt, $type, null, array('value' => $type));
+        $boxes = [];
+        foreach($event->types as $type) {
+            $boxes[] = $mform->createElement('checkbox', 'type_' . $cnt, $type, null, ['value' => $type]);
             $mform->setType('type_' . $cnt, PARAM_BOOL);
             if (isset($item) && in_array($type, $item->data->types)) {
                 $mform->setDefault('type_' . $cnt, 1);
@@ -107,10 +107,10 @@ class item_form extends moodleform {
             $cnt++;
         }
         $mform->addGroup($boxes, 'type', get_string('item:type', 'confman'), null, false);
-        $boxes = array();
+        $boxes = [];
         $cnt = 0;
-        foreach($event->targetgroups AS $target) {
-            $boxes[] = $mform->createElement('checkbox', 'targetgroup_' . $cnt, $target["targetgroup"] . (!empty($target["description"]) ? ' (<i>' . $target["description"] . '</i>)' : ''), null, array('value' => $target["targetgroup"]));
+        foreach($event->targetgroups as $target) {
+            $boxes[] = $mform->createElement('checkbox', 'targetgroup_' . $cnt, $target["targetgroup"] . (!empty($target["description"]) ? ' (<i>' . $target["description"] . '</i>)' : ''), null, ['value' => $target["targetgroup"]]);
             $mform->setType('targetgroup_' . $cnt, PARAM_BOOL);
             if (isset($item) && in_array($target["targetgroup"], $item->data->targetgroups)) {
                 $mform->setDefault('targetgroup_' . $cnt, 1);
@@ -121,7 +121,7 @@ class item_form extends moodleform {
 
         $mform->addElement('editor', 'description', get_string('item:description', 'confman'), $editoroptions);
         $mform->setType('description', PARAM_RAW);
-        $mform->addRule('description', NULL, 'required');
+        $mform->addRule('description', null, 'required');
 
         $mform->addElement('editor', 'memo', get_string('item:memo', 'confman'), $editoroptions);
         $mform->setType('memo', PARAM_RAW);
@@ -129,15 +129,17 @@ class item_form extends moodleform {
         // We only need recaptcha or alternative when this is a new item.
         if (empty($item->id)) {
             if (get_config('auth_email', 'recaptcha') && !empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey)) {
-                //recaptcha is enabled
+                // recaptcha is enabled
                 $mform->addElement('recaptcha', 'recaptcha');
                 $mform->closeHeaderBefore('recaptcha');
             } else {
                 $itemcheck = cache::make('mod_confman', 'itemcheck');
                 $calc = $itemcheck->get('itemcheck');
                 if (empty($calc)) {
-                    $calcs = array("+" , "-");
-                    $z1 = 0; $z2 = 0; $calc = "+";
+                    $calcs = ["+", "-"];
+                    $z1 = 0;
+                    $z2 = 0;
+                    $calc = "+";
                     while (empty(eval("return $z1$calc$z2;"))) {
                         $z1 = rand(10, 20);
                         $z2 = rand(1, 10);
@@ -152,9 +154,9 @@ class item_form extends moodleform {
 
                 $mform->addElement('text', 'checkhuman', get_string('item:check', 'confman') . '<br />' . $calc . ' =');
                 $mform->setType('checkhuman', PARAM_INT);
-                $mform->addRule('checkhuman', NULL, 'required', '', 'server');
-                $mform->addRule('checkhuman', NULL, 'nonzero', '', 'server');
-                $mform->addRule(array('checkhuman', 'checkhuman2'), get_string('item:invalidvalue', 'confman'), 'compare', 'eq', 'server');
+                $mform->addRule('checkhuman', null, 'required', '', 'server');
+                $mform->addRule('checkhuman', null, 'nonzero', '', 'server');
+                $mform->addRule(['checkhuman', 'checkhuman2'], get_string('item:invalidvalue', 'confman'), 'compare', 'eq', 'server');
                 $mform->closeHeaderBefore('checkhuman');
             }
         }
@@ -164,20 +166,22 @@ class item_form extends moodleform {
         if ($item->id > 0) {
             $mform->addElement('header', 'yourfiles', get_string('item:files', 'confman'));
             $uniqid = md5(time());
-            $mform->addElement('html',
-                $OUTPUT->render_from_template('mod_confman/form_row',
-                    array(
+            $mform->addElement(
+                'html',
+                $OUTPUT->render_from_template(
+                    'mod_confman/form_row',
+                    [
                         'label' => get_string('item:files', 'confman'),
-                        'content' => implode('', array(
+                        'content' => implode('', [
                             '<input type="file" value="' . get_string('item:file:upload') . '" multiple="multiple"',
                             '    onchange="var inp = this; require([\'mod_confman/main\'], function(MAIN) { MAIN.upload_file(inp, \'' . $CFG->wwwroot . '\', \'' . $uniqid . '\', ' . $item->id . ', \'' . optional_param('token', '', PARAM_TEXT) . '\'); });">',
                             '<div id="mod_confman_form-' . $uniqid . '" style="width: 100%;"></div>',
-                        ))
-                    )
+                        ]),
+                    ]
                 )
             );
             global $PAGE;
-            $PAGE->requires->js_call_amd('mod_confman/main', 'upload_file_prepare', array($uniqid, $CFG->wwwroot, json_encode($item->get_files('array'), JSON_NUMERIC_CHECK)));
+            $PAGE->requires->js_call_amd('mod_confman/main', 'upload_file_prepare', [$uniqid, $CFG->wwwroot, json_encode($item->get_files('array'), JSON_NUMERIC_CHECK)]);
         }
     }
 }
