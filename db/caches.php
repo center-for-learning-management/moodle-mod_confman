@@ -22,11 +22,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$definitions = array(
-    'itemcheck' => array(
-        'mode' => cache_store::MODE_SESSION
-    ),
-    'hadtokenfor' => array(
-        'mode' => cache_store::MODE_SESSION
-    ),
-);
+$definitions = [
+    'itemcheck' => [
+        'mode' => cache_store::MODE_SESSION,
+    ],
+    'hadtokenfor' => [
+        'mode' => cache_store::MODE_SESSION,
+    ],
+];

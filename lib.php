@@ -25,9 +25,9 @@ defined('MOODLE_INTERNAL') || die;
 class mod_confman_event {
     public function __construct($id) {
         global $CFG, $DB;
-        $confman = $DB->get_record('confman', array('id' => $id)); //, '*', MUST_EXIST);
+        $confman = $DB->get_record('confman', ['id' => $id]); // , '*', MUST_EXIST);
         $keys = array_keys((array)$confman);
-        foreach ($keys AS $key) {
+        foreach ($keys as $key) {
             $this->{$key} = $confman->{$key};
         }
         $this->id = $id;
@@ -43,13 +43,13 @@ class mod_confman_event {
         $this->can_manage = (has_capability('mod/confman:manage', $this->context));
 
         $targetgroups = explode("\n", $confman->targetgroups);
-        $this->targetgroups = array();
+        $this->targetgroups = [];
         foreach ($targetgroups as $target) {
             $target = explode("#", $target);
-            $this->targetgroups[] = array(
+            $this->targetgroups[] = [
                 "targetgroup" => trim(@$target[0]),
                 "description" => trim(@$target[1]),
-            );
+            ];
         }
 
         $this->types = explode("\n", $confman->types);
@@ -75,7 +75,7 @@ class mod_confman_event {
             $url = moodle_url::make_pluginfile_url(
                 $f->get_contextid(), $f->get_component(), $f->get_filearea(),
                 $f->get_itemid(), $f->get_filepath(), $f->get_filename()
-                );
+            );
             return $url;
         }
         return "";
@@ -84,25 +84,25 @@ class mod_confman_event {
      * Renders the HTML-Output for an event.
      * @param subtype Render a subtype of this template, e.g. '_public'
      */
-    public function html($subtype='') {
+    public function html($subtype = '') {
         global $CFG, $OUTPUT;
         $this->_submissionstart = date("Y-m-d H:i", $this->submissionstart);
         $this->_submissionend = date("Y-m-d H:i", $this->submissionend);
-        $this->submissionlink = $CFG->wwwroot . "/mod/confman/index.php?embedded=1&event=".$this->id;
+        $this->submissionlink = $CFG->wwwroot . "/mod/confman/index.php?embedded=1&event=" . $this->id;
 
         return $OUTPUT->render_from_template('mod_confman/event' . $subtype, $this);
     }
     public function list_items() {
         global $DB, $CFG;
-        $items = $DB->get_records('confman_items', array('event' => $this->id)); ?>
+        $items = $DB->get_records('confman_items', ['event' => $this->id]); ?>
 
         <h3><?php echo get_string('event:submissions', 'confman'); ?></h3>
-        <a href="view.php?id=<?php echo $this->cmid; ?>&act=listall" data-role="button" data-icon="action"><?php echo get_string('event:listall','confman'); ?></a>
+        <a href="view.php?id=<?php echo $this->cmid; ?>&act=listall" data-role="button" data-icon="action"><?php echo get_string('event:listall', 'confman'); ?></a>
         <ul class="confman_list" data-role="listview" data-filter="true" data-split-icon="gear" data-inset="true">
         <?php
         foreach ($items as $item) {
-            $submissionlink = $CFG->wwwroot."/mod/confman/index.php?event=".$this->id."&id=".$item->id;
-            $submissionedit = $CFG->wwwroot."/mod/confman/index.php?event=".$this->id."&id=".$item->id."&token=".$item->token;
+            $submissionlink = $CFG->wwwroot . "/mod/confman/index.php?event=" . $this->id . "&id=" . $item->id;
+            $submissionedit = $CFG->wwwroot . "/mod/confman/index.php?event=" . $this->id . "&id=" . $item->id . "&token=" . $item->token;
         ?>
             <li>
                 <div class="controls">
@@ -110,14 +110,14 @@ class mod_confman_event {
                     <?php
                     if (has_capability('mod/confman:manage', $this->context)) { ?>
                     <a href="<?php echo $submissionedit; ?>" target="_blank">edit</a>
-                    <?php
+                        <?php
                     } /* has_capability mod confman:manage */
                     ?>
                 </div>
                 <h3><?php echo $item->title; ?></h3>
-                <p><?php echo $item->firstname." ".$item->lastname; ?></p>
+                <p><?php echo $item->firstname . " " . $item->lastname; ?></p>
             </li>
-        <?php
+            <?php
         }
         ?>
         </ul>
@@ -126,16 +126,17 @@ class mod_confman_event {
 }
 
 class mod_confman_item {
-    static $packed_vars = array('approved', 'contents', 'description', 'memo', 'organization', 'targetgroups', 'title_pre', 'title_post', 'types');
+    static $packed_vars = ['approved', 'contents', 'description', 'memo', 'organization', 'targetgroups', 'title_pre', 'title_post', 'types'];
     /**
      * Constructor for confman item.
      * @param id of item
      * @param token (optional) to edit without login
      * @param eventid (optional) eventid - only used when id is 0
      */
-    public function __construct($id = 0, $token="", $eventid = 0) {
+    public function __construct($id = 0, $token = "", $eventid = 0) {
         global $CFG, $DB, $event;
-        if (empty($eventid) && !empty($event->id)) $eventid = $event->id;
+        if (empty($eventid) && !empty($event->id)) { $eventid = $event->id;
+        }
         $this->debug = optional_param("debug", 0, PARAM_INT);
         $this->itemcheck = cache::make('mod_confman', 'itemcheck');
         $this->hadtokenfor = cache::make('mod_confman', 'hadtokenfor');
@@ -145,20 +146,20 @@ class mod_confman_item {
         $this->token = $token;
 
         if ($id > 0) {
-            $this->data = $DB->get_record('confman_items', array('id' => $this->id), '*', IGNORE_MISSING);
+            $this->data = $DB->get_record('confman_items', ['id' => $this->id], '*', IGNORE_MISSING);
         } else {
-            $this->data = (object) array(
+            $this->data = (object) [
                 'id' => 0,
                 'event' => $eventid,
                 'contents' => '{}',
-            );
+            ];
         }
 
         $this->event = new mod_confman_event($this->data->event);
 
         try {
             $c = @json_decode($this->data->contents);
-            foreach(self::$packed_vars AS $var) {
+            foreach(self::$packed_vars as $var) {
                 if (!empty($c->{$var})) {
                     $this->data->{$var} = $c->{$var};
                 } else {
@@ -168,10 +169,10 @@ class mod_confman_item {
         } catch(Exception $e) {}
 
         if (!is_array($this->data->targetgroups)) {
-            $this->data->targetgroups = array();
+            $this->data->targetgroups = [];
         }
         if (!is_array($this->data->types)) {
-            $this->data->types = array();
+            $this->data->types = [];
         }
 
         $this->context = $this->event->context;
@@ -183,16 +184,16 @@ class mod_confman_item {
         $this->can_view = ($this->had_token || $this->can_manage || $this->can_rate);
         $this->can_edit = ($this->id == 0 || $this->had_token || $this->can_manage);
 
-        $this->data->files = array();
+        $this->data->files = [];
         $fs = get_file_storage();
         $files = $fs->get_area_files($this->context->id, 'mod_confman', 'content', $this->id);
-        foreach ($files AS $file) {
+        foreach ($files as $file) {
             if (str_replace('.', '', $file->get_filename()) != ""){
                 $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());
-                $this->data->files[] = array(
+                $this->data->files[] = [
                     'filename' => $file->get_filename(),
                     'url' => '' . $url,
-                );
+                ];
             }
         }
 
@@ -204,7 +205,7 @@ class mod_confman_item {
         if ($this->can_view || $this->can_edit) {
             $hadtokenfor = $this->hadtokenfor->get('hadtokenfor');
             if (!$hadtokenfor) {
-                $hadtokenfor = array();
+                $hadtokenfor = [];
             }
             $hadtokenfor[] = $this->id;
             $this->hadtokenfor->set('hadtokenfor', $hadtokenfor);
@@ -217,18 +218,18 @@ class mod_confman_item {
     public function get_table() {
         $table = new html_table();
         $table->width = '80%';
-        $table->size = array('150', '');
-        $table->data = array(
-            new html_table_row(array(get_string('item:event', 'confman'), $this->event->name)),
-            new html_table_row(array(get_string('item:title', 'confman'), $this->data->title)),
-            new html_table_row(array(get_string('item:contributor', 'confman'), '<a href="mailto:' . $this->data->email . '">' . $this->data->contributor . '</a>')),
-            new html_table_row(array(get_string('item:organization', 'confman'), $this->data->organization)),
-            new html_table_row(array(get_string('item:type', 'confman'), implode(', ', $this->data->types))),
-            new html_table_row(array(get_string('item:targetgroup', 'confman'), implode(', ', $this->data->targetgroups))),
-            new html_table_row(array(get_string('item:description', 'confman'), $this->data->description)),
-            new html_table_row(array(get_string('item:memo', 'confman'), $this->data->memo)),
-            new html_table_row(array(get_string('item:files', 'confman'), $this->get_files())),
-        );
+        $table->size = ['150', ''];
+        $table->data = [
+            new html_table_row([get_string('item:event', 'confman'), $this->event->name]),
+            new html_table_row([get_string('item:title', 'confman'), $this->data->title]),
+            new html_table_row([get_string('item:contributor', 'confman'), '<a href="mailto:' . $this->data->email . '">' . $this->data->contributor . '</a>']),
+            new html_table_row([get_string('item:organization', 'confman'), $this->data->organization]),
+            new html_table_row([get_string('item:type', 'confman'), implode(', ', $this->data->types)]),
+            new html_table_row([get_string('item:targetgroup', 'confman'), implode(', ', $this->data->targetgroups)]),
+            new html_table_row([get_string('item:description', 'confman'), $this->data->description]),
+            new html_table_row([get_string('item:memo', 'confman'), $this->data->memo]),
+            new html_table_row([get_string('item:files', 'confman'), $this->get_files()]),
+        ];
         return $table;
     }
     /**
@@ -240,15 +241,16 @@ class mod_confman_item {
     public function get_files($format = 'html', $delimiter = ', ') {
         switch($format) {
             case 'html':
-                if (count($this->data->files) == 0) return get_string('none');
-                $files = array();
-                foreach ($this->data->files AS $file) {
+                if (count($this->data->files) == 0) { return get_string('none');
+                }
+                $files = [];
+                foreach ($this->data->files as $file) {
                     $files[] = '<a href="' . $file['url'] . '" target="_blank">' . $file['filename'] . '</a>';
                 }
                 return implode($delimiter, $files);
             break;
             case 'csv':
-            break;
+                break;
             case 'array':
                 return $this->data->files;
             break;
@@ -277,11 +279,11 @@ class mod_confman_item {
         $x = explode(";base64,", $base64);
         $content = base64_decode(@$x[1]);
         $fs = get_file_storage();
-        $fileinfo = array(
+        $fileinfo = [
             'contextid' => $this->context->id, 'component' => 'mod_confman',
             'filearea' => 'content', 'itemid' => $this->id, 'filepath' => '/',
-            'filename' => $filename, 'timecreated' => time(), 'timemodified' => time()
-        );
+            'filename' => $filename, 'timecreated' => time(), 'timemodified' => time(),
+        ];
         $file = $fs->get_file(
             $fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
             $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']
@@ -316,7 +318,8 @@ class mod_confman_item {
             $this->id, '/', $filename
         );
 
-        if (!$file) return true;
+        if (!$file) { return true;
+        }
         if ($file) {
             return $file->delete();
         }
@@ -333,11 +336,10 @@ class mod_confman_item {
             for($a = 0; $a < count($this->event->targetgroups); $a++) {
                 if (!empty($data->{'targetgroup_' . $a})) {
                     $data->targetgroups[] = $this->event->targetgroups[$a]['targetgroup'];
-
                 }
                 unset($data->{'targetgroup_' . $a});
             }
-            $data->types = array();
+            $data->types = [];
             for($a = 0; $a < count($this->event->types); $a++) {
                 if (!empty($data->{'type_' . $a})) {
                     $data->types[] = $this->event->types[$a];
@@ -347,8 +349,8 @@ class mod_confman_item {
         }
 
         // Pack metadata into JSON.
-        $c = (object) array();
-        foreach(self::$packed_vars AS $var) {
+        $c = (object) [];
+        foreach(self::$packed_vars as $var) {
             if (isset($data->{$var})) {
                 $c->{$var} = $data->{$var};
             } else {
@@ -358,7 +360,7 @@ class mod_confman_item {
         $data->contents = json_encode($c);
 
         if (empty($data->token)) {
-            $data->token = md5(date("Y-m-d H:i:s").rand(0, 1000));
+            $data->token = md5(date("Y-m-d H:i:s") . rand(0, 1000));
         }
 
         global $DB;
@@ -385,7 +387,8 @@ class mod_confman_item {
     }
 
     public function mail($type = "mail", $action = "") {
-        if (empty($this->event->{'mail_contributor_' . $action}) && empty($this->event->{'mail_organizer_' . $action})) return;
+        if (empty($this->event->{'mail_contributor_' . $action}) && empty($this->event->{'mail_organizer_' . $action})) { return;
+        }
         global $CFG, $DB;
         $touser = new stdClass();
         $touser->email = $this->data->email;
@@ -414,7 +417,7 @@ class mod_confman_item {
 
         $fs = get_file_storage();
         $itemfiles = $fs->get_area_files($this->context->id, 'mod_confman', 'content', $this->id);
-        $files = array();
+        $files = [];
 
         foreach ($itemfiles as $f) {
             if ($f->get_filename() == ".") {
@@ -425,31 +428,31 @@ class mod_confman_item {
                 $f->get_contextid(), $f->get_component(), $f->get_filearea(),
                 $f->get_itemid(), $f->get_filepath(), $f->get_filename()
             );
-            $files[] = "<li><a href=\"".$url."\">".$f->get_filename()."</a></li>";
+            $files[] = "<li><a href=\"" . $url . "\">" . $f->get_filename() . "</a></li>";
         }
         if (count($files) == 0) {
-            $files[] = "<li>".get_string("none", "confman")."</li>";
+            $files[] = "<li>" . get_string("none", "confman") . "</li>";
         }
-        $comments = array();
+        $comments = [];
         if (!empty($this->event->id) && !empty($this->id)) {
             $dbcomments = $DB->get_records_sql(
                 'SELECT * FROM {confman_comments} WHERE eventid=? AND itemid=? ORDER BY created DESC',
-                array($this->event->id, $this->id)
+                [$this->event->id, $this->id]
             );
             if (count($dbcomments) > 0) {
-                $comments[] = "<h2>".get_string('comments', 'confman')."</h2>";
+                $comments[] = "<h2>" . get_string('comments', 'confman') . "</h2>";
                 $comments[] = "<ul data-role=\"listview\" data-inset=\"true\">\n";
             }
             foreach ($dbcomments as $comment) {
                 $comment->created_readable = date("l, j. F Y H:i:s", $comment->created);
                 if ($comment->userid > 0) {
-                    $user = $DB->get_record("user", array("id" => $comment->userid));
-                    $comment->user = "<a class=\"ui-li-aside\" href=\"".$CFG->wwwroot."/user/profile.php?id=".
-                        $user->id."\" data-ajax=\"false\">".$user->firstname." ".$user->lastname."</a>";
+                    $user = $DB->get_record("user", ["id" => $comment->userid]);
+                    $comment->user = "<a class=\"ui-li-aside\" href=\"" . $CFG->wwwroot . "/user/profile.php?id=" .
+                        $user->id . "\" data-ajax=\"false\">" . $user->firstname . " " . $user->lastname . "</a>";
                 } else {
-                    $comment->user = "<span class=\"ui-li-aside\">".get_string("user:external", "confman")."</span>";
+                    $comment->user = "<span class=\"ui-li-aside\">" . get_string("user:external", "confman") . "</span>";
                 }
-                $comments[] = "<li data-role=\"list-divider\"><p>".$comment->created_readable.", ".$comment->user."</p><div>".$comment->comment."</div></li>";
+                $comments[] = "<li data-role=\"list-divider\"><p>" . $comment->created_readable . ", " . $comment->user . "</p><div>" . $comment->comment . "</div></li>";
             }
             if (count($dbcomments) > 0) {
                 $comments[] = "</ul>\n";
@@ -457,10 +460,10 @@ class mod_confman_item {
         }
 
         // Use $type instead of 'mail' to make various templates.
-        $messagehtml = file_get_contents($CFG->dirroot."/mod/confman/templates/mail.html");
+        $messagehtml = file_get_contents($CFG->dirroot . "/mod/confman/templates/mail.html");
 
         $templatelines = explode("{", $messagehtml);
-        $lines = array();
+        $lines = [];
         // Required for mail-templates.
         $this->manageLink = $this->manage_link();
 
@@ -475,48 +478,48 @@ class mod_confman_item {
                 switch($keytype){
                     case "lang":
                         if ($keyidentifier == "mail:thankyou") {
-                            $keyidentifier = "mail:thankyou:".$type;
+                            $keyidentifier = "mail:thankyou:" . $type;
                         }
                         $key = get_string($keyidentifier, "confman");
-                    break;
+                        break;
                     case "this":
                         if (isset($this->{$keyidentifier})) {
                             $key = $this->{$keyidentifier};
                         } else {
-                            $key = "{+".$key."+}";
+                            $key = "{+" . $key . "+}";
                         }
-                    break;
+                        break;
                     case "item":
                         if (isset($this->data->{$keyidentifier})) {
                             switch ($keyidentifier) {
                                 case "targetgroups":
                                 case "types":
                                     $key = implode(", ", $this->data->{$keyidentifier});
-                                break;
+                                    break;
                                 default:
                                     $key = $this->data->{$keyidentifier};
                             }
                         } else {
-                            $key = "{*".$key."*}";
+                            $key = "{*" . $key . "*}";
                         }
-                    break;
+                        break;
                     case "event":
                         if (isset($this->event->{$keyidentifier})) {
                             $key = $this->event->{$keyidentifier};
                         } else {
-                            $key = "{*".$key."*}";
+                            $key = "{*" . $key . "*}";
                         }
-                    break;
+                        break;
                     case "files":
                         $key = implode("\n", $files);
-                    break;
+                        break;
                     case "comments":
                         $key = implode("\n", $comments);
-                    break;
+                        break;
                     default:
-                        $key = "{{".$key."}}";
+                        $key = "{{" . $key . "}}";
                 }
-                $lines[] = $key.$remainder;
+                $lines[] = $key . $remainder;
             }
         }
         $messagehtml = implode("", $lines);
@@ -527,7 +530,7 @@ class mod_confman_item {
 
         $messagetext = html_to_text($messagehtml);
 
-        $subject = get_string('mail:subject:'.$type, 'confman');
+        $subject = get_string('mail:subject:' . $type, 'confman');
 
         if (!empty($this->event->{'mail_contributor_' . $action})) {
             email_to_user($touser, $fromuser, $subject, $messagetext, $messagehtml, "", true);
@@ -551,37 +554,39 @@ class mod_confman_item {
         global $CFG, $OUTPUT;
         $this->data->eventname = $this->event->name;
         $this->data->contributor = $this->data->title_pre;
-        if (!empty($this->data->contributor)) $this->data->contributor .= ' ';
+        if (!empty($this->data->contributor)) { $this->data->contributor .= ' ';
+        }
         $this->data->contributor .= $this->data->firstname . ' ' . $this->data->lastname;
-        if (!empty($this->data->title_post)) $this->data->contributor .= ', ';
+        if (!empty($this->data->title_post)) { $this->data->contributor .= ', ';
+        }
         $this->data->contributor .= $this->data->title_post;
 
-        $this->data->actions = array();
+        $this->data->actions = [];
         if ($this->can_view) {
-            $this->data->actions[] = array(
+            $this->data->actions[] = [
                 'classname' => 'preview',
                 'icon' => $CFG->wwwroot . '/pix/t/preview.svg',
                 'label' => get_string('view', 'core'),
                 'url' => $CFG->wwwroot . '/mod/confman/index.php?event=' . $this->event->id . '&id=' . $this->id . '&preview=1',
-            );
+            ];
         }
         if ($this->can_edit) {
-            $this->data->actions[] = array(
+            $this->data->actions[] = [
                 'classname' => 'edit',
                 'icon' => $CFG->wwwroot . '/pix/i/settings.svg',
                 'label' => get_string('edit', 'core'),
                 'url' => $this->manage_link(),
-            );
+            ];
         }
         if ($this->can_manage) {
             $icon = (!empty($this->data->approved) && $this->data->approved > 0) ? 'completion-auto-pass' : 'completion-auto-n';
-            $this->data->actions[] = array(
+            $this->data->actions[] = [
                 'classname' => 'approve',
                 'icon' => $CFG->wwwroot . '/pix/i/' . $icon . '.svg',
                 'label' => get_string('actions:approve', 'confman'),
                 'onclick' => 'var a = this; require(["mod_confman/main"], function(MAIN) { MAIN.set_approved("' . $CFG->wwwroot . '", ' . $this->id . ', "' . $this->token . '", a); }); return false;',
                 'url' => '#',
-            );
+            ];
         }
     }
 
@@ -591,18 +596,18 @@ class mod_confman_item {
      */
     public function set_form_data($dataform) {
         $data = clone($this->data);
-        $data->description = array(
+        $data->description = [
             'format' => 1,
             'text' => $data->description,
-        );
-        $data->memo = array(
+        ];
+        $data->memo = [
             'format' => 1,
             'text' => $data->memo,
-        );
+        ];
         $dataform->set_data($data);
     }
 
-/*
+    /*
     public function comments() {
         global $DB, $CFG;
         // Either we are allowed to manage, rate, or we knew the token!
@@ -705,7 +710,7 @@ class mod_confman_item {
         $this->comment_stored = $DB->insert_record('confman_comments', $comment, true);
         $this->mail("comment");
     }
-*/
+    */
     public static function asutf8($str) {
         if (preg_match('!!u', $str)) {
             return $str;
@@ -715,10 +720,10 @@ class mod_confman_item {
     }
 }
 
-function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options=array()) {
+function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options = []) {
     // Make sure the filearea is one of those used by the plugin.
 
-    if (!in_array($filearea, array('content', 'introx'))) {
+    if (!in_array($filearea, ['content', 'introx'])) {
         return false;
     }
 
@@ -740,7 +745,7 @@ function mod_confman_pluginfile($course, $cm, $context, $filearea, $args, $force
     if (!$args) {
         $filepath = '/';
     } else {
-        $filepath = '/'.implode('/', $args).'/';
+        $filepath = '/' . implode('/', $args) . '/';
     }
 
     // Retrieve the file from the Files API.
@@ -770,7 +775,7 @@ function confman_add_instance($event) {
         if (!empty($draftid)) {
             file_save_draft_area_files(
                 $draftid, $modcontext->id, 'mod_confman', 'introx', $event->id,
-                array('subdirs'=>true)
+                ['subdirs' => true]
             );
         }
     }
@@ -789,7 +794,7 @@ function confman_update_instance($event) {
 
     $event->intro = file_save_draft_area_files(
         $draftid, $modcontext->id, 'mod_confman', 'introx', $event->id,
-        array('subdirs'=>true), $event->intro
+        ['subdirs' => true], $event->intro
     );
     $DB->update_record('confman', $event);
 
@@ -797,9 +802,9 @@ function confman_update_instance($event) {
 }
 function confman_delete_instance($id) {
     global $DB;
-    $DB->delete_records('confman_comments', array('eventid' => $id));
-    $DB->delete_records('confman_items', array('event' => $id));
-    $DB->delete_records('confman', array('id' => $id));
+    $DB->delete_records('confman_comments', ['eventid' => $id]);
+    $DB->delete_records('confman_items', ['event' => $id]);
+    $DB->delete_records('confman', ['id' => $id]);
 
     return true;
 }
@@ -819,19 +824,32 @@ function confman_delete_instance($id) {
  */
 function confman_supports($feature) {
     switch($feature) {
-        case FEATURE_GROUPS:                  return false;
-        case FEATURE_GROUPINGS:               return false;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return false;
-        case FEATURE_COMPLETION_HAS_RULES:    return false;
-        case FEATURE_GRADE_HAS_GRADE:         return false;
-        case FEATURE_GRADE_OUTCOMES:          return false;
-        case FEATURE_RATE:                    return false;
-        case FEATURE_BACKUP_MOODLE2:          return false;
-        case FEATURE_SHOW_DESCRIPTION:        return false;
-        case FEATURE_PLAGIARISM:              return false;
-        case FEATURE_ADVANCED_GRADING:        return false;
+        case FEATURE_GROUPS:
+            return false;
+        case FEATURE_GROUPINGS:
+            return false;
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return false;
+        case FEATURE_COMPLETION_HAS_RULES:
+            return false;
+        case FEATURE_GRADE_HAS_GRADE:
+            return false;
+        case FEATURE_GRADE_OUTCOMES:
+            return false;
+        case FEATURE_RATE:
+            return false;
+        case FEATURE_BACKUP_MOODLE2:
+            return false;
+        case FEATURE_SHOW_DESCRIPTION:
+            return false;
+        case FEATURE_PLAGIARISM:
+            return false;
+        case FEATURE_ADVANCED_GRADING:
+            return false;
 
-        default: return null;
+        default:
+            return null;
     }
 }

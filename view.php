@@ -23,10 +23,10 @@
 require('../../config.php');
 $cmid = required_param('id', PARAM_INT);
 $cm = get_coursemodule_from_id('confman', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
-$PAGE->set_url('/mod/confman/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/confman/view.php', ['id' => $cm->id]);
 $PAGE->set_title(get_string('modulename', 'confman'));
 $PAGE->set_heading(get_string('modulename', 'confman'));
 $PAGE->set_pagelayout('standard');
@@ -55,25 +55,25 @@ echo $OUTPUT->header();
 $act = optional_param("act", "", PARAM_TEXT);
 switch ($act) {
     case "listall":
-        $items = $DB->get_records('confman_items', array('event' => $confman->id));
-        echo $OUTPUT->render_from_template('mod_confman/item_table_head', array());
-        foreach($items AS $item) {
+        $items = $DB->get_records('confman_items', ['event' => $confman->id]);
+        echo $OUTPUT->render_from_template('mod_confman/item_table_head', []);
+        foreach($items as $item) {
             $item = new mod_confman_item($item->id);
             $item->prepare_output();
             echo $OUTPUT->render_from_template('mod_confman/item_table_row', $item->data);
         }
-        echo $OUTPUT->render_from_template('mod_confman/item_table_foot', array());
-    break;
+        echo $OUTPUT->render_from_template('mod_confman/item_table_foot', []);
+        break;
     default:
         echo $confman->html();
-        $items = $DB->get_records('confman_items', array('event' => $confman->id));
+        $items = $DB->get_records('confman_items', ['event' => $confman->id]);
         echo $OUTPUT->render_from_template('mod_confman/item_table_head', $confman);
-        foreach($items AS $item) {
+        foreach($items as $item) {
             $item = new mod_confman_item($item->id);
             $item->prepare_output();
             echo $OUTPUT->render_from_template('mod_confman/item_table_row', $item->data);
         }
-        echo $OUTPUT->render_from_template('mod_confman/item_table_foot', array());
+        echo $OUTPUT->render_from_template('mod_confman/item_table_foot', []);
 }
 
 echo $OUTPUT->footer();

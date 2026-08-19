@@ -28,7 +28,7 @@ require_once($CFG->libdir . "/formslib.php");
 class comment_form extends moodleform {
     static $accepted_types = '';
     static $areamaxbytes = 10485760;
-    static $maxbytes = 1024*1024;
+    static $maxbytes = 1024 * 1024;
     static $maxfiles = 1;
     static $subdirs = 0;
 
@@ -37,9 +37,9 @@ class comment_form extends moodleform {
         // Item gets customized to particular event / item.
         global $event, $item;
 
-        $editoroptions = array('subdirs'=>0, 'maxbytes'=>0, 'maxfiles'=>0,
-                               'changeformat'=>0, 'context'=>null, 'noclean'=>0,
-                               'trusttext'=>0, 'enable_filemanagement' => false);
+        $editoroptions = ['subdirs' => 0, 'maxbytes' => 0, 'maxfiles' => 0,
+                               'changeformat' => 0, 'context' => null, 'noclean' => 0,
+                               'trusttext' => 0, 'enable_filemanagement' => false];
 
         $mform = $this->_form;
         // Attention, this is the item-id, not comment-id!
@@ -61,7 +61,7 @@ class comment_form extends moodleform {
     }
 
     function validation($data, $files) {
-        $errors = array();
+        $errors = [];
         if (empty(strip_tags($data['comment']['text']))) {
             $errors['comment'] = get_string('comment:missing', 'confman');
         }

@@ -14,14 +14,14 @@ define(
                     url: $(sender).attr('href') + '&embedded=1&noheader=1',
                     data: {},
                     success: function(data) {
-                        //console.log(' => Response', data);
+                        // Console.log(' => Response', data);
                         ModalFactory.create({
                             type: ModalFactory.types.OK,
                             title: tr.find('.title').html(),
                             body: data,
                         })
                         .then(function(modal) {
-                            //console.log(' => Show modal');
+                            // Console.log(' => Show modal');
                             modal.show();
                         });
                     },
@@ -40,13 +40,16 @@ define(
                 console.log('mod_confman/main -> item_file_mail(wwwroot, id, token, type)', wwwroot, id, token, type);
                 $.ajax({
                     url: wwwroot + '/mod/confman/ajax.php',
-                    data: { act: 'file_mail', id: id, token: token, type: type },
-                    success: function(data) { console.log(' => Response', data); },
+                    data: {act: 'file_mail', id: id, token: token, type: type},
+                    success: function(data) {
+ console.log(' => Response', data);
+},
                     dataType: 'html',
                 });
             },
             /**
              * Removes a file from an item.
+             * @param a
              */
             item_remove_file: function(a) {
                 var MAIN = this;
@@ -60,7 +63,7 @@ define(
                 console.log(wwwroot + '/mod/confman/ajax.php?act=file_delete&id=' + id + '&token=' + token + '&filename=' + filename);
                 $.ajax({
                     url: wwwroot + '/mod/confman/ajax.php',
-                    data: { act: 'file_delete', id: id, token: token, filename: filename },
+                    data: {act: 'file_delete', id: id, token: token, filename: filename},
                     success: function(data) {
                         console.log(' => Response', data);
                         try {
@@ -72,7 +75,9 @@ define(
                             } else {
                                 alert('Error removing file');
                             }
-                        } catch(e) { console.log('Could not analyze result', e); }
+                        } catch (e) {
+ console.log('Could not analyze result', e);
+}
                     },
                     dataType: 'html',
                 });
@@ -92,6 +97,10 @@ define(
             },
             /**
              * Toggles the approved status of an item.
+             * @param wwwroot
+             * @param id
+             * @param token
+             * @param a
              */
             set_approved: function(wwwroot, id, token, a) {
                 console.log('mod_confman/main -> set_approved(wwwroot, id, token, a)', wwwroot, id, token, a);
@@ -99,7 +108,7 @@ define(
                 var current = $(row).hasClass('approved');
                 $.ajax({
                     url: wwwroot + '/mod/confman/ajax.php',
-                    data: { act: 'set_approved', id: id, token: token, setto: (current) ? 0 : 1 },
+                    data: {act: 'set_approved', id: id, token: token, setto: (current) ? 0 : 1},
                     success: function(data) {
                         console.log(' => Response', data);
                         try {
@@ -114,7 +123,9 @@ define(
                                     $(row).find('.approve img').attr('src', wwwroot + '/pix/i/completion-auto-n.svg');
                                 }
                             }
-                        } catch(e) { console.log('Could not analyze result', e); }
+                        } catch (e) {
+ console.log('Could not analyze result', e);
+}
                     },
                     dataType: 'html',
                 });
@@ -130,7 +141,7 @@ define(
             upload_file: function(inp, wwwroot, uniqid, id, token) {
                 console.log('mod_confman/main -> upload_file(inp)', inp);
                 var MAIN = this;
-                //console.log(inp.files);return;
+                // Console.log(inp.files);return;
                 for (var a = 0; a < inp.files.length; a++) {
                     var file = inp.files[a];
                     MAIN.upload_file_item(uniqid, wwwroot, id, token, file);
@@ -164,11 +175,16 @@ define(
              * @param domo DOM-Object presenting the upload.
              * @param formData FormData-Object for Ajax-Query.
              * @param url url to send the file to.
+             * @param uniqid
+             * @param wwwroot
+             * @param id
+             * @param token
+             * @param file
              */
             upload_file_item: function(uniqid, wwwroot, id, token, file) {
                 var MAIN = this;
-                var reader  = new FileReader();
-                reader.addEventListener("load", function () {
+                var reader = new FileReader();
+                reader.addEventListener("load", function() {
                     var formData = new FormData();
                     formData.append('act', 'file_append');
                     formData.append('id', id);
@@ -203,7 +219,7 @@ define(
                         if (event.target.readyState == 4) {
                             var filename = $(domo).find('.filename').attr('data-filename');
                             if (typeof MAIN.xhrs[filename] !== 'undefined') {
-                                delete(MAIN.xhrs[filename]);
+                                delete (MAIN.xhrs[filename]);
                             }
                             switch (event.target.status) {
                                 case 200:
@@ -215,8 +231,8 @@ define(
                                             MAIN.upload_file_prepare_uploaded(domo);
                                             MAIN.item_file_mail(wwwroot, id, token, 'file_append');
                                         }
-                                    } catch(e) {
-                                        console.log(' => Invalid result was', xhr.responseText)
+                                    } catch (e) {
+                                        console.log(' => Invalid result was', xhr.responseText);
                                     }
                                 break;
                                 case 404:
@@ -238,6 +254,7 @@ define(
             /**
              * Prepares the HTML-Form and lists current files.
              * @param uniqid of mustache.
+             * @param wwwroot
              * @param files as JSON.
              */
             upload_file_prepare: function(uniqid, wwwroot, files) {
@@ -251,6 +268,7 @@ define(
             },
             /**
              * Switches a domo to status upload was complete, set link to file.
+             * @param domo
              */
             upload_file_prepare_uploaded: function(domo) {
                 // File uploaded properly and we got a response.
@@ -263,12 +281,13 @@ define(
             },
             /**
              * Switches a domo to upload pending.
+             * @param domo
              */
             upload_file_prepare_uploading: function(domo) {
                 $(domo).find('.filename').html($(domo).find('.filename').attr('data-filename'));
                 $(domo).find('.progress').css('display', 'inline-block').children().css('width', '0%');
                 $(domo).find('.remove').css('display', 'none');
             },
-        }
+        };
     }
 );

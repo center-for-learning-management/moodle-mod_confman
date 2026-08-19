@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function (grunt) {
+module.exports = function(grunt) {
     // We need to include the core Moodle grunt file too, otherwise we can't run tasks like "amd".
     require("grunt-load-gruntfile")(grunt);
     grunt.loadGruntfile("../../Gruntfile.js");
@@ -9,7 +9,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-less");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-clean");
-    //grunt.loadNpmTasks('grunt-contrib-uglify');
+    // Grunt.loadNpmTasks('grunt-contrib-uglify');
 
     grunt.initConfig({
         watch: {
@@ -38,11 +38,11 @@ module.exports = function (grunt) {
                     cwd: 'amd/src',
                     src: '*.js',
                     dest: 'amd/build',
-                    rename: function (dst, src) {
+                    rename: function(dst, src) {
                         // To keep src js files and make new files as *.min.js :
                         return dst + '/' + src.replace('.js', '.min.js');
                         // Or to override to src :
-                        //return src;
+                        // return src;
                     }
                 }]
             }

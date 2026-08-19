@@ -50,21 +50,21 @@ if ($item->id == 0 || (!$item->can_edit && !$item->can_view)) {
     exit;
 }
 
-$result = array();
+$result = [];
 
 switch($action){
     case "file_append":
         if ($item->can_edit) {
             $filename = required_param("filename", PARAM_TEXT);
             $filecontent = required_param("file", PARAM_RAW);
-            $result["url"] = "".$item->file_append($filename, $filecontent);
+            $result["url"] = "" . $item->file_append($filename, $filecontent);
             if ($result["url"] != "") {
                 $result["status"] = "ok";
             } else {
                 $result["status"] = "error";
             }
         }
-    break;
+        break;
     case "file_delete":
         if ($item->can_edit) {
             $filename = required_param("filename", PARAM_TEXT);
@@ -76,18 +76,18 @@ switch($action){
                 $result["status"] = "error";
             }
         }
-    break;
+        break;
     case "file_mail":
         if ($item->can_edit) {
             $type = required_param("type", PARAM_TEXT);
-            if (!in_array($type, array("file_append", "file_delete"))) {
+            if (!in_array($type, ["file_append", "file_delete"])) {
                 $result["status"] = "error";
             } else {
                 $result["status"] = "ok";
                 $item->mail($type, 'files');
             }
         }
-    break;
+        break;
     case "set_approved":
         if ($item->can_manage) {
             $setto = optional_param('setto', 0, PARAM_INT);
@@ -96,7 +96,7 @@ switch($action){
             $result["setto"] = $setto;
             $result["status"] = "ok";
         }
-    break;
+        break;
 }
 
 die(mod_confman_item::asutf8(json_encode($result, JSON_NUMERIC_CHECK)));
