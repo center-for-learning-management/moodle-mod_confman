@@ -24,26 +24,26 @@ var mod_confman = {
     id: 0,
     token: '',
     spinner: '<img src="img/spinner.gif" />',
-    fileAppend: function(id,token){
+    fileAppend: function(id, token) {
         console.log('mod_confman.fileAppend(' + id + ',' + token + ')');
         mod_confman.id = id;
         mod_confman.token = token;
-        var filename = $('#item-file')[0].files[0].name.replace(/ /g,'_');
+        var filename = $('#item-file')[0].files[0].name.replace(/ /g, '_');
         var file = $('#item-file')[0].files[0];
-        var reader  = new FileReader();
-        reader.addEventListener("load", function () {
-            mod_confman.call({ act: 'file_append', filename: filename, file: reader.result });
+        var reader = new FileReader();
+        reader.addEventListener("load", function() {
+            mod_confman.call({act: 'file_append', filename: filename, file: reader.result});
         }, false);
 
-        if(file) {
+        if (file) {
             reader.readAsDataURL(file);
         }
 
         var li = $('li[data-filename="' + filename + '"]');
-        if(li.length == 0) {
+        if (li.length == 0) {
             li = $('<li>').attr('data-filename', filename);
-            var a1 = $('<a>').html(filename).attr('target','_blank').attr('data-ajax','false');
-            var a2 = $('<a>').html('delete').attr('href','#');
+            var a1 = $('<a>').html(filename).attr('target', '_blank').attr('data-ajax', 'false');
+            var a2 = $('<a>').html('delete').attr('href', '#');
             li.append(a1).append(a2);
             $('#item-files').append(li);
         }
@@ -51,15 +51,15 @@ var mod_confman = {
         li.addClass('alert-loading');
         $('#item-files').listview('refresh');
     },
-    fileDelete: function(id,token,filename){
+    fileDelete: function(id, token, filename) {
         mod_confman.id = id;
         mod_confman.token = token;
         var li = $('li[data-filename="' + filename + '"]');
         li.addClass('alert-loading');
 
-        mod_confman.call({ act: 'file_delete', filename: filename });
+        mod_confman.call({act: 'file_delete', filename: filename});
     },
-    call: function(data){
+    call: function(data) {
         console.log('mod_confman.call(' + data + ')');
         console.log(data);
 
@@ -67,40 +67,48 @@ var mod_confman = {
             url: 'ajax.php?id=' + mod_confman.id + '&token=' + mod_confman.token,
             method: 'POST',
             data: data,
-        }).done(function(res){
+        }).done(function(res) {
             console.log('Result is:');
             console.log(res);
-            try { res = JSON.parse(res); } catch(e){}
+            try {
+ res = JSON.parse(res);
+} catch (e) {}
             console.log('Parsed:');
             console.log(res);
             mod_confman.result(data, res);
-        }).fail(function(jqXHR, textStatus){
+        }).fail(function(jqXHR, textStatus) {
             console.error('ERROR');
             console.log(textStatus);
-        }).always(function(){
-            if(data.act == 'file_append') { $('#item-file').val(''); }
+        }).always(function() {
+            if (data.act == 'file_append') {
+ $('#item-file').val('');
+}
         });
     },
-    result: function(data, result){
+    result: function(data, result) {
         console.log('mod_confman.result(' + data + ',' + result + ')');
         console.log(data);
         console.log(result);
 
-        if(data.act == 'file_delete'){
-            if(result.status == 'ok'){
+        if (data.act == 'file_delete') {
+            if (result.status == 'ok') {
                 $('li[data-filename="' + data.filename + '"]').remove();
                 $('#item-files').listview('refresh');
             } else {
                 $('li[data-filename="' + data.filename + '"]').removeClass('alert-loading').addClass('alert-error');
             }
         }
-        if(data.act == 'file_append'){
-            if(result.status == 'ok'){
+        if (data.act == 'file_append') {
+            if (result.status == 'ok') {
                 $('li[data-filename="' + data.filename + '"]').removeClass('alert-loading').removeClass('alert-error');
                 $('li[data-filename="' + data.filename + '"] a:first-child').attr('href', result.url).html(data.filename);
-                $('li[data-filename="' + data.filename + '"] a:last-child').attr('href', '#').attr('onclick','mod_confman.fileDelete(' + mod_confman.id + ',\'' + mod_confman.token + '\',\'' + data.filename + '\');').html('delete');
-                try { $('#item-files').listview('refresh'); } catch(e){ console.error(e);}
+                $('li[data-filename="' + data.filename + '"] a:last-child').attr('href', '#').attr('onclick', 'mod_confman.fileDelete(' + mod_confman.id + ',\'' + mod_confman.token + '\',\'' + data.filename + '\');').html('delete');
+                try {
+ $('#item-files').listview('refresh');
+} catch (e) {
+ console.error(e);
+}
             }
         }
     },
-}
+};

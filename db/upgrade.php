@@ -28,13 +28,13 @@ function xmldb_confman_upgrade($oldversion) {
 
     if ($oldversion < 2017091104) {
         $table = new xmldb_table('confman');
-        $fields = array(
+        $fields = [
             new xmldb_field('event_organizer', XMLDB_TYPE_TEXT, null, null, null, null, null, 'contents'),
             new xmldb_field('event_contact', XMLDB_TYPE_TEXT, null, null, null, null, null, 'event_organizer'),
             new xmldb_field('targetgroups', XMLDB_TYPE_TEXT, null, null, null, null, null, 'event_contact'),
-            new xmldb_field('types', XMLDB_TYPE_TEXT, null, null, null, null, null, 'targetgroups')
-        );
-        foreach($fields AS $field) {
+            new xmldb_field('types', XMLDB_TYPE_TEXT, null, null, null, null, null, 'targetgroups'),
+        ];
+        foreach($fields as $field) {
             if (!$dbman->field_exists($table, $field)) {
                 $dbman->add_field($table, $field);
             }
@@ -43,15 +43,15 @@ function xmldb_confman_upgrade($oldversion) {
     }
     if ($oldversion < 2019041000) {
         $table = new xmldb_table('confman');
-        $fields = array(
+        $fields = [
             new xmldb_field('mail_contributor_creation', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'types'),
             new xmldb_field('mail_contributor_update', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'mail_contributor_creation'),
             new xmldb_field('mail_contributor_files', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'mail_contributor_update'),
             new xmldb_field('mail_organizer_creation', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'mail_contributor_files'),
             new xmldb_field('mail_organizer_update', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'mail_organizer_creation'),
             new xmldb_field('mail_organizer_files', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'mail_organizer_update'),
-        );
-        foreach($fields AS $field) {
+        ];
+        foreach($fields as $field) {
             if (!$dbman->field_exists($table, $field)) {
                 $dbman->add_field($table, $field);
             }
@@ -79,16 +79,16 @@ function xmldb_confman_upgrade($oldversion) {
             $dbman->drop_field($table, $field);
         }
         // Try to convert old file uploads as we now use the course module context.
-        $module = $DB->get_record('modules', array('name' => 'confman'));
-        $instances = $DB->get_records('course_modules', array('module' => $module->id));
-        foreach ($instances AS $instance) {
+        $module = $DB->get_record('modules', ['name' => 'confman']);
+        $instances = $DB->get_records('course_modules', ['module' => $module->id]);
+        foreach ($instances as $instance) {
             $coursecontext = context_course::instance($instance->course);
             $modulecontext = context_module::instance($instance->id);
-            $confman = $DB->get_record('confman', array('id' => $instance->instance));
+            $confman = $DB->get_record('confman', ['id' => $instance->instance]);
             $confman->cmid = $instance->id;
             $DB->update_record('confman', $confman);
-            $files = $DB->get_records('files', array('contextid' => $coursecontext->id, 'component' => 'mod_confman', 'filearea' => 'content'));
-            foreach ($files AS $file) {
+            $files = $DB->get_records('files', ['contextid' => $coursecontext->id, 'component' => 'mod_confman', 'filearea' => 'content']);
+            foreach ($files as $file) {
                 $file->contextid = $modulecontext->id;
                 $DB->update_record('files', $file);
             }

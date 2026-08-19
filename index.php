@@ -21,7 +21,7 @@
  */
 
 require_once('../../config.php');
-require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir . '/adminlib.php');
 sesskey();
 /*
  * This page can be accessed by users that are not logged in
@@ -60,25 +60,27 @@ $PAGE->set_context(context_course::instance($event->course));
 if ($embedded) {
     $PAGE->set_pagelayout('frametop');
 } else {
-    $PAGE->set_pagelayout('incourse'); //($USER->id == 0 || isguestuser($USER)) ? 'frametop' : 'incourse');
+    $PAGE->set_pagelayout('incourse'); // ($USER->id == 0 || isguestuser($USER)) ? 'frametop' : 'incourse');
 }
-$PAGE->set_url(new moodle_url('/mod/confman/index.php', array('event' => $eventid, 'id' => $itemid, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded, 'ts' => time()))); // the timestamp is used as atto would behave weird.
+$PAGE->set_url(new moodle_url('/mod/confman/index.php', ['event' => $eventid, 'id' => $itemid, 'token' => $token, 'preview' => $preview, 'embedded' => $embedded, 'ts' => time()])); // the timestamp is used as atto would behave weird.
 $PAGE->set_title($item->get_title());
 $PAGE->set_heading($item->get_title());
 
-//$PAGE->requires->js('/mod/confman/script/js.js');
-//$PAGE->requires->css('/mod/confman/style/main.css');
-//$PAGE->requires->css('/mod/confman/style/confman.min.css');
+// $PAGE->requires->js('/mod/confman/script/js.js');
+// $PAGE->requires->css('/mod/confman/style/main.css');
+// $PAGE->requires->css('/mod/confman/style/confman.min.css');
 
 // Now that we have created our item we check if we are allowed to access.
 if (!$item->can_edit && !$item->can_view) {
-    if (!$noheader) echo $OUTPUT->header();
-    echo $OUTPUT->render_from_template('mod_confman/alert', array(
+    if (!$noheader) { echo $OUTPUT->header();
+    }
+    echo $OUTPUT->render_from_template('mod_confman/alert', [
         'content' => 'Permission denied',
         'type' => 'danger',
         'url' => $CFG->wwwroot . '/my',
-    ));
-    if (!$noheader) echo $OUTPUT->footer();
+    ]);
+    if (!$noheader) { echo $OUTPUT->footer();
+    }
     die();
 }
 
@@ -90,28 +92,29 @@ if ($data = $itemform->get_data()) {
     if ($item->id > 0) {
         redirect($item->manage_link() . '&showsuccess=1');
         echo $OUTPUT->header();
-        echo $OUTPUT->render_from_template('mod_confman/alert', array(
-            'content' => get_string('item:stored', 'confman').'<br />'.get_string('item:you_can_modify', 'confman').': <a href="'.$item->manage_link().'">'.$item->manage_link().'</a>',
+        echo $OUTPUT->render_from_template('mod_confman/alert', [
+            'content' => get_string('item:stored', 'confman') . '<br />' . get_string('item:you_can_modify', 'confman') . ': <a href="' . $item->manage_link() . '">' . $item->manage_link() . '</a>',
             'type' => 'success',
             'url' => $item->manage_link(),
-        ));
+        ]);
         echo $OUPUT->footer();
         die();
     } else {
-        echo $OUTPUT->render_from_template('mod_confman/alert', array(
+        echo $OUTPUT->render_from_template('mod_confman/alert', [
             'content' => get_string('event:error', 'confman'),
             'type' => 'danger',
-        ));
+        ]);
     }
 }
 
-if (!$noheader) echo $OUTPUT->header();
+if (!$noheader) { echo $OUTPUT->header();
+}
 if (optional_param('showsuccess', 0, PARAM_INT) == 1) {
-    echo $OUTPUT->render_from_template('mod_confman/alert', array(
-        'content' => get_string('item:stored', 'confman').'<br />'.get_string('item:you_can_modify', 'confman').': <a href="'.$item->manage_link().'">'.$item->manage_link().'</a>',
+    echo $OUTPUT->render_from_template('mod_confman/alert', [
+        'content' => get_string('item:stored', 'confman') . '<br />' . get_string('item:you_can_modify', 'confman') . ': <a href="' . $item->manage_link() . '">' . $item->manage_link() . '</a>',
         'type' => 'success',
         'url' => $item->manage_link(),
-    ));
+    ]);
 }
 
 $item->data->event = $eventid;
@@ -131,36 +134,36 @@ if ($item->id > 0) {
         $commentform = new comment_form(str_replace($CFG->wwwroot, '', $PAGE->url));
         if ($data = $commentform->get_data()) {
             // Store the new comment.
-            $comment = array(
+            $comment = [
                 'comment' => $data->comment['text'],
                 'created' => time(),
                 'eventid' => $data->event,
                 'itemid' => $data->id,
                 'userid' => (!empty($USER->id) && !isguestuser($USER)) ? $USER->id : 0,
-            );
+            ];
             $comment['id'] = $DB->insert_record('confman_comments', $comment, true);
-            echo $OUTPUT->render_from_template('mod_confman/alert', array(
+            echo $OUTPUT->render_from_template('mod_confman/alert', [
                 'content' => ($comment['id'] > 0) ? get_string('comment:stored:success', 'confman') : get_string('comment:stored:failed', 'confman'),
                 'type' => ($comment['id'] > 0) ? 'success' : 'danger',
-            ));
+            ]);
             $item->mail("mail", "update");
         }
-        $commentform->set_data(array('id' => $item->id, 'event' => $event->id, 'token' => $token));
+        $commentform->set_data(['id' => $item->id, 'event' => $event->id, 'token' => $token]);
         $commentform->display();
     }
 
     $sql = "SELECT * FROM {confman_comments}
               WHERE eventid=? AND itemid=?
               ORDER BY created DESC";
-    $comments = $DB->get_records_sql($sql, array($item->event->id, $item->id));
-    foreach ($comments AS $comment) {
+    $comments = $DB->get_records_sql($sql, [$item->event->id, $item->id]);
+    foreach ($comments as $comment) {
         $comment->created_readable = date("l, j. F Y H:i:s", $comment->created);
         if ($comment->userid > 0) {
-            $user = $DB->get_record("user", array("id" => $comment->userid));
-            $comment->user = "<a class=\"ui-li-aside\" href=\"".$CFG->wwwroot."/user/profile.php?id=".
-                $user->id."\" data-ajax=\"false\">".$user->firstname." ".$user->lastname."</a>";
+            $user = $DB->get_record("user", ["id" => $comment->userid]);
+            $comment->user = "<a class=\"ui-li-aside\" href=\"" . $CFG->wwwroot . "/user/profile.php?id=" .
+                $user->id . "\" data-ajax=\"false\">" . $user->firstname . " " . $user->lastname . "</a>";
         } else {
-            $comment->user = "<span class=\"ui-li-aside\">".get_string("user:external", "confman")."</span>";
+            $comment->user = "<span class=\"ui-li-aside\">" . get_string("user:external", "confman") . "</span>";
         }
         echo $OUTPUT->render_from_template('mod_confman/comment', $comment);
     }
@@ -169,11 +172,12 @@ if ($item->id > 0) {
     if (!$event->is_obsolete) {
         $itemform->display();
     } else {
-        echo $OUTPUT->render_from_template('mod_confman/alert', array(
+        echo $OUTPUT->render_from_template('mod_confman/alert', [
             'content' => get_string('item:obsolete', 'confman'),
             'type' => 'warning',
-        ));
+        ]);
     }
 }
 
-if (!$noheader) echo $OUTPUT->footer();
+if (!$noheader) { echo $OUTPUT->footer();
+}
